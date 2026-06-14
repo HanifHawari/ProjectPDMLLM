@@ -1,0 +1,30 @@
+# Virtual environment - jangan di-commit
+backend/venv/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment file (berisi API KEY RAHASIA!)
+backend/.env
+
+# SQLite database
+backend/*.db
+
+# Dataset besar (>100MB - tidak bisa di-push ke GitHub)
+dataset/program/cleaned_programs_detailed.csv
+dataset/program/programs_detailed_boostcamp_kaggle.csv
+
+# TinyGPT binary tokenizer models
+tinyGPT_temp/tokenizer_*.model
+tinyGPT_temp/__pycache__/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

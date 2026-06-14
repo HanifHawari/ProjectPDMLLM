@@ -1,0 +1,119 @@
+[
+    {
+        "exp_name": "bpe_vocab80",
+        "vocab_size_config": 80,
+        "vocab_size_actual": 80,
+        "token_count": 11741,
+        "model_type": "bpe",
+        "training_time_sec": 12.069710969924927,
+        "final_loss": 2.5168793201446533,
+        "loss_history": [
+            [
+                0,
+                4.403195858001709
+            ],
+            [
+                300,
+                3.2866106033325195
+            ],
+            [
+                600,
+                3.055622100830078
+            ],
+            [
+                900,
+                2.8077166080474854
+            ],
+            [
+                1200,
+                2.699138641357422
+            ],
+            [
+                1499,
+                2.5168793201446533
+            ]
+        ],
+        "generations": {
+            "machine learning": "machine learning tri dansunnya. Pfe tlural modaljar. Wd token berjatasi",
+            "kecerdasan buatan": "kecerdasan buatan dara anolikan king evN) d ealungengtats abDangadikan t"
+        }
+    },
+    {
+        "exp_name": "bpe_vocab200",
+        "vocab_size_config": 200,
+        "vocab_size_actual": 200,
+        "token_count": 7889,
+        "model_type": "bpe",
+        "training_time_sec": 11.044363498687744,
+        "final_loss": 3.1421687602996826,
+        "loss_history": [
+            [
+                0,
+                5.441568374633789
+            ],
+            [
+                300,
+                4.391174793243408
+            ],
+            [
+                600,
+                4.057681560516357
+            ],
+            [
+                900,
+                3.554595947265625
+            ],
+            [
+                1200,
+                2.9689857959747314
+            ],
+            [
+                1499,
+                3.1421687602996826
+            ]
+        ],
+        "generations": {
+            "machine learning": "machine learning manuenlas pendektureserbitas normat secara melal ting isrigunisasi. Salah the lti",
+            "kecerdasan buatan": "kecerdasan buatan berpl tokentebut tokenisasi sersto teks b sebungimalintektur to thatly, di the we The"
+        }
+    },
+    {
+        "exp_name": "unigram_vocab150",
+        "vocab_size_config": 150,
+        "vocab_size_actual": 150,
+        "token_count": 9561,
+        "model_type": "unigram",
+        "training_time_sec": 9.397460699081421,
+        "final_loss": 2.89901065826416,
+        "loss_history": [
+            [
+                0,
+                5.151384353637695
+            ],
+            [
+                300,
+                3.7098348140716553
+            ],
+            [
+                600,
+                3.311717987060547
+            ],
+            [
+                900,
+                3.0952062606811523
+            ],
+            [
+                1200,
+                3.0563786029815674
+            ],
+            [
+                1499,
+                2.89901065826416
+            ]
+        ],
+        "generations": {
+            "machine learning": "machine learning prercstrentrangan ini likeai dan premantamundukan Tgak",
+            "kecerdasan buatan": "kecerdasan buatangunakan ofkan nelerck Uning seratialuan kskenfiengan daroung seb"
+        }
+    }
+]
