@@ -105,7 +105,7 @@ export default function Sidebar({ username }) {
         </div>
 
         {/* Navigation */}
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 4, flex: 1, overflowY: 'auto', paddingBottom: 16 }}>
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
           {navItems.map(item => (
             <NavLink
               key={item.to}
@@ -151,6 +151,7 @@ export default function Sidebar({ username }) {
           top: 0;
           left: 0;
           z-index: 200;
+          overflow-y: auto;
           box-sizing: border-box;
         }
         .sidebar-logo {
@@ -202,8 +203,8 @@ export default function Sidebar({ username }) {
             height: calc(100dvh - 56px);
             transform: translateX(-100%);
             transition: transform 0.3s ease;
-            /* Flex column: nav tumbuh, logout di bawah tetapi tidak tenggelam */
-            padding-bottom: 0;
+            /* Padding bottom agar ada sedikit ruang saat scroll sampai bawah */
+            padding-bottom: 16px;
           }
           .sidebar-aside.sidebar-open {
             transform: translateX(0);
@@ -230,18 +231,7 @@ export default function Sidebar({ username }) {
             background: rgba(0,0,0,0.6);
             z-index: 150;
           }
-          /* Logout button di mobile: tidak tenggelam, menempel di bawah container */
-          .sidebar-logout {
-            margin-top: auto;
-            background: #111111;
-            border-top: 1px solid #2a2a2a;
-            border-radius: 0;
-            border-left: none;
-            border-right: none;
-            border-bottom: none;
-            padding-top: 14px;
-            padding-bottom: 14px;
-          }
+
         }
       `}</style>
     </>
