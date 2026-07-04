@@ -31,6 +31,8 @@ DATASET_BASE = Path(os.getenv("DATASET_BASE_PATH", "../dataset"))
 WORKOUT_CSV       = DATASET_BASE / "gerakan" / "Workout.csv"
 # Menggunakan Master Nutrition (Gabungan USDA, Healthy Foods, dan Allergens)
 MASTER_NUTRITION_CSV = DATASET_BASE / "nutrisiAI" / "master_nutrition.csv"
+# Healthy Foods Database untuk tab "Makanan Sehat"
+HEALTHY_FOODS_CSV = DATASET_BASE / "nutrisiAI" / "healthy_foods_database.csv"
 PROGRAMS_CSV      = DATASET_BASE / "program" / "program_summary.csv"
 # Menggunakan versi cleaned dari program detail
 PROGRAMS_DETAIL_CSV = DATASET_BASE / "program" / "cleaned_programs_detailed.csv"

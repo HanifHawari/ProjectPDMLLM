@@ -1,12 +1,55 @@
 import { NavLink, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
 
+// SVG Icons — transparan seperti sketsa outline
+const Icons = {
+  dashboard: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.45">
+      <rect x="3" y="3" width="7" height="7" rx="1"/>
+      <rect x="14" y="3" width="7" height="7" rx="1"/>
+      <rect x="3" y="14" width="7" height="7" rx="1"/>
+      <rect x="14" y="14" width="7" height="7" rx="1"/>
+    </svg>
+  ),
+  chat: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.45">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      <line x1="9" y1="10" x2="15" y2="10"/>
+      <line x1="9" y1="14" x2="13" y2="14"/>
+    </svg>
+  ),
+  nutrition: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.45">
+      <path d="M12 2a9 9 0 0 1 9 9c0 4.97-4.03 9-9 9S3 15.97 3 11a9 9 0 0 1 9-9z"/>
+      <path d="M12 2c0 4-2 7-2 9s2 5 2 9"/>
+      <path d="M5.5 9h13"/>
+    </svg>
+  ),
+  workout: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.45">
+      <path d="M6 5v14"/>
+      <path d="M18 5v14"/>
+      <path d="M3 8h3"/>
+      <path d="M3 16h3"/>
+      <path d="M18 8h3"/>
+      <path d="M18 16h3"/>
+      <path d="M6 12h12"/>
+    </svg>
+  ),
+  profile: (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" opacity="0.45">
+      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+      <circle cx="12" cy="7" r="4"/>
+    </svg>
+  ),
+}
+
 const navItems = [
-  { to: '/dashboard', label: 'Dashboard', icon: '▣' },
-  { to: '/chat', label: 'AI Chat', icon: '◈' },
-  { to: '/nutrition', label: 'Nutrition', icon: '◉' },
-  { to: '/workout', label: 'Workout', icon: '◆' },
-  { to: '/profile', label: 'Profile', icon: '◎' },
+  { to: '/dashboard', label: 'Dashboard', iconKey: 'dashboard' },
+  { to: '/chat',      label: 'AI Chat',   iconKey: 'chat'      },
+  { to: '/nutrition', label: 'Nutrition', iconKey: 'nutrition' },
+  { to: '/workout',   label: 'Workout',   iconKey: 'workout'   },
+  { to: '/profile',   label: 'Profile',   iconKey: 'profile'   },
 ]
 
 export default function Sidebar({ username }) {
@@ -17,7 +60,6 @@ export default function Sidebar({ username }) {
     localStorage.removeItem('fitmind_user')
     localStorage.removeItem('fitmind_profile')
     setMobileOpen(false)
-    // Memaksa reload halaman agar state React (user) benar-benar terhapus
     window.location.href = '/'
   }
 
@@ -72,7 +114,10 @@ export default function Sidebar({ username }) {
               className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}
               onClick={() => setMobileOpen(false)}
             >
-              <span style={{ fontSize: 14 }}>{item.icon}</span>
+              {/* Icon transparan background besar */}
+              <span className="nav-icon-bg">
+                {Icons[item.iconKey]}
+              </span>
               {item.label}
             </NavLink>
           ))}
@@ -81,9 +126,13 @@ export default function Sidebar({ username }) {
         {/* Logout */}
         <button
           onClick={handleLogout}
-          className="btn-ghost"
-          style={{ width: '100%', textAlign: 'left', marginTop: 16 }}
+          className="btn-ghost sidebar-logout"
         >
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
           Logout
         </button>
       </aside>
@@ -115,21 +164,53 @@ export default function Sidebar({ username }) {
         .sidebar-overlay {
           display: none;
         }
+        .sidebar-logout {
+          width: 100%;
+          text-align: left;
+          margin-top: 16px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+
+        /* Nav icon background */
+        .nav-icon-bg {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 30px;
+          height: 30px;
+          border-radius: 8px;
+          background: rgba(163,163,163,0.06);
+          flex-shrink: 0;
+          transition: background 0.2s;
+        }
+        .nav-item.active .nav-icon-bg {
+          background: rgba(34,197,94,0.12);
+        }
+        .nav-item.active .nav-icon-bg svg {
+          stroke: #22c55e;
+          opacity: 0.8;
+        }
+        .nav-item:hover .nav-icon-bg {
+          background: rgba(163,163,163,0.1);
+        }
 
         /* ── Mobile ── */
         @media (max-width: 768px) {
           .sidebar-aside {
-            top: 56px; /* di bawah top bar */
-            height: calc(100dvh - 56px); /* gunakan dvh agar tidak tertutup browser UI bawah */
+            top: 56px;
+            height: calc(100dvh - 56px);
             transform: translateX(-100%);
             transition: transform 0.3s ease;
-            padding-bottom: 100px; /* Diperbesar agar tombol logout tidak tenggelam */
+            /* Flex column: nav tumbuh, logout di bawah tetapi tidak tenggelam */
+            padding-bottom: 16px;
           }
           .sidebar-aside.sidebar-open {
             transform: translateX(0);
           }
           .sidebar-logo {
-            display: none; /* Logo sudah ada di top bar */
+            display: none;
           }
           .sidebar-mobile-bar {
             display: flex;
@@ -149,6 +230,20 @@ export default function Sidebar({ username }) {
             inset: 0;
             background: rgba(0,0,0,0.6);
             z-index: 150;
+          }
+          /* Logout button di mobile: tidak tenggelam, sticky di bawah */
+          .sidebar-logout {
+            position: sticky;
+            bottom: 0;
+            margin-top: 12px;
+            background: #111111;
+            border-top: 1px solid #2a2a2a;
+            border-radius: 0;
+            border-left: none;
+            border-right: none;
+            border-bottom: none;
+            padding-top: 14px;
+            padding-bottom: 14px;
           }
         }
       `}</style>

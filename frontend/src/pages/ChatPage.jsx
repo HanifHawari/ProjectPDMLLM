@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
 import ReactMarkdown from 'react-markdown'
 import api from '../api'
@@ -16,10 +16,8 @@ function TypewriterMarkdown({ content, streaming }) {
 
     // Calculate how many characters to add to catch up smoothly
     const diff = content.length - displayedContent.length;
-    // Kurangi rasio catch-up agar lebih sering mengetik 1-1
     const charsToAdd = Math.max(1, Math.floor(diff / 30));
 
-    // Perbesar timeout untuk memperlambat efek ketik (misal 40ms)
     const timeout = setTimeout(() => {
       setDisplayedContent(prev => content.slice(0, prev.length + charsToAdd));
     }, 40);
@@ -27,7 +25,6 @@ function TypewriterMarkdown({ content, streaming }) {
     return () => clearTimeout(timeout);
   }, [content, streaming, displayedContent]);
 
-  // If streaming is done but we still haven't displayed everything, force it.
   useEffect(() => {
     if (!streaming && displayedContent !== content) {
       setDisplayedContent(content);
@@ -49,6 +46,7 @@ export default function ChatPage({ user }) {
   const [streaming, setStreaming] = useState(false)
   const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false)
   const bottomRef = useRef(null)
+  const textareaRef = useRef(null)
   const username = user?.username
 
   useEffect(() => {
@@ -58,6 +56,26 @@ export default function ChatPage({ user }) {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [messages])
+
+  // Auto-resize textarea — tidak ada ruang kosong berlebih
+  const autoResize = useCallback(() => {
+    const el = textareaRef.current
+    if (!el) return
+    el.style.height = 'auto'
+    const scrollH = el.scrollHeight
+    const maxH = 120
+    if (scrollH <= maxH) {
+      el.style.height = scrollH + 'px'
+      el.style.overflowY = 'hidden'
+    } else {
+      el.style.height = maxH + 'px'
+      el.style.overflowY = 'auto'
+    }
+  }, [])
+
+  useEffect(() => {
+    autoResize()
+  }, [input, autoResize])
 
   async function loadSessions() {
     try {
@@ -180,20 +198,20 @@ export default function ChatPage({ user }) {
 
       {/* Mobile Backdrop */}
       {mobileHistoryOpen && (
-        <div 
+        <div
           onClick={() => setMobileHistoryOpen(false)}
           style={{ position: 'fixed', inset: 0, top: 56, background: 'rgba(0,0,0,0.6)', zIndex: 99 }}
         />
       )}
 
-      {/* Sessions sidebar */}
+      {/* ── Sessions Sidebar ── */}
       <aside className={`chat-sessions-sidebar ${mobileHistoryOpen ? 'open' : ''}`}>
         <div style={{ paddingLeft: 2, marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
             Riwayat Chat
           </div>
           <button className="btn-primary" style={{ width: '100%', padding: '8px 12px' }} onClick={newChat}>
-            Chat Baru
+            + Chat Baru
           </button>
         </div>
         <div style={{ flex: 1, overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -221,7 +239,7 @@ export default function ChatPage({ user }) {
                 onClick={(e) => deleteSession(s.id, e)}
                 style={{ background: 'none', border: 'none', color: '#525252', cursor: 'pointer', fontSize: 14, padding: '0 0 0 6px', lineHeight: 1 }}
               >
-                x
+                ×
               </button>
             </div>
           ))}
@@ -233,11 +251,11 @@ export default function ChatPage({ user }) {
         </div>
       </aside>
 
-      {/* Chat area */}
+      {/* ── Chat area ── */}
       <main className="chat-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* Mobile History Toggle Header */}
         <div className="mobile-history-toggle" style={{
-          padding: '12px 20px',
+          padding: '12px 16px',
           borderBottom: '1px solid #2a2a2a',
           justifyContent: 'space-between',
           alignItems: 'center',
@@ -250,7 +268,7 @@ export default function ChatPage({ user }) {
             background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.25)',
             padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
           }}>
-            Riwayat Chat
+            Riwayat
           </button>
         </div>
 
@@ -340,20 +358,30 @@ export default function ChatPage({ user }) {
         }}>
           <div style={{ display: 'flex', gap: 10, alignItems: 'flex-end', maxWidth: 760, margin: '0 auto' }}>
             <textarea
+              ref={textareaRef}
               className="input-field"
               rows={1}
               placeholder="Tanyakan sesuatu kepada FitMind AI..."
               value={input}
-              onChange={e => setInput(e.target.value)}
+              onChange={e => {
+                setInput(e.target.value)
+              }}
               onKeyDown={handleKeyDown}
               disabled={streaming}
-              style={{ 
-                resize: 'none', minHeight: 44, maxHeight: 120, overflowY: 'auto', 
-                lineHeight: '1.5', opacity: streaming ? 0.6 : 1, cursor: streaming ? 'not-allowed' : 'text' 
+              style={{
+                resize: 'none',
+                height: '44px',
+                minHeight: '44px',
+                maxHeight: '120px',
+                overflowY: 'hidden',
+                lineHeight: '1.5',
+                opacity: streaming ? 0.6 : 1,
+                cursor: streaming ? 'not-allowed' : 'text',
+                padding: '11px 14px',
               }}
             />
             <button className="btn-primary" onClick={sendMessage} disabled={streaming || !input.trim()}
-              style={{ padding: '11px 20px', flexShrink: 0 }}>
+              style={{ padding: '11px 20px', flexShrink: 0, height: '44px' }}>
               Kirim
             </button>
           </div>

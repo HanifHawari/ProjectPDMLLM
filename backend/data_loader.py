@@ -19,7 +19,7 @@ import logging
 pd.set_option("future.no_silent_downcasting", True)
 
 from config import (
-    WORKOUT_CSV, MASTER_NUTRITION_CSV, PROGRAMS_CSV,
+    WORKOUT_CSV, MASTER_NUTRITION_CSV, HEALTHY_FOODS_CSV, PROGRAMS_CSV,
     PROGRAMS_DETAIL_CSV, USER_PROFILES_CSV
 )
 
@@ -34,6 +34,7 @@ class DataStore:
 
     workout: pd.DataFrame = None
     master_nutrition: pd.DataFrame = None
+    healthy_foods: pd.DataFrame = None
     programs: pd.DataFrame = None
     user_profiles: pd.DataFrame = None
 
@@ -91,7 +92,36 @@ def load_all_datasets():
                 ds.master_nutrition["food_name"].astype(str).str.lower().fillna("")
             )
 
-    # 3. Program summary (~10k baris)
+    # 3. Healthy Foods Database (untuk tab Makanan Sehat)
+    ds.healthy_foods = _safe_read_csv(HEALTHY_FOODS_CSV)
+    if not ds.healthy_foods.empty:
+        ds.healthy_foods.columns = ds.healthy_foods.columns.str.strip()
+        # Normalisasi nama kolom kalori dan protein agar konsisten
+        col_map = {}
+        for col in ds.healthy_foods.columns:
+            col_lower = col.lower().strip()
+            if col_lower in ('calories', 'calorie', 'kcal', 'energy_kcal'):
+                col_map[col] = 'calories'
+            elif col_lower in ('protein', 'protein_g', 'protein(g)'):
+                col_map[col] = 'protein_g'
+            elif col_lower in ('carbs', 'carbohydrate', 'carbs_g', 'carbohydrates_g', 'carb_g'):
+                col_map[col] = 'carbs_g'
+            elif col_lower in ('fat', 'fat_g', 'total_fat', 'total_fat_g'):
+                col_map[col] = 'fat_g'
+            elif col_lower in ('food_name', 'name', 'food', 'item'):
+                col_map[col] = 'food_name'
+            elif col_lower in ('health_score', 'score', 'healthscore'):
+                col_map[col] = 'health_score'
+            elif col_lower in ('food_type', 'type', 'category', 'food_category'):
+                col_map[col] = 'food_type'
+        if col_map:
+            ds.healthy_foods = ds.healthy_foods.rename(columns=col_map)
+        # Pastikan ada kolom food_name
+        if 'food_name' not in ds.healthy_foods.columns and len(ds.healthy_foods.columns) > 0:
+            ds.healthy_foods['food_name'] = ds.healthy_foods.iloc[:, 0].astype(str)
+        logger.info(f"✅ Healthy foods columns: {list(ds.healthy_foods.columns[:10])}")
+
+    # 4. Program summary (~10k baris)
     ds.programs = _safe_read_csv(PROGRAMS_CSV)
     if not ds.programs.empty:
         ds.programs.columns = ds.programs.columns.str.strip()
@@ -102,7 +132,7 @@ def load_all_datasets():
                 errors="coerce"
             )
 
-    # 4. User profiles (975 baris)
+    # 5. User profiles (975 baris)
     ds.user_profiles = _safe_read_csv(USER_PROFILES_CSV)
     if not ds.user_profiles.empty:
         if "BMI" not in ds.user_profiles.columns:
