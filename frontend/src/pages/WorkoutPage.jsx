@@ -27,7 +27,7 @@ export default function WorkoutPage({ user }) {
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar username={user?.username} />
-      <main style={{ marginLeft: 220, flex: 1, padding: '32px 36px' }}>
+      <main className="dashboard-main">
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4 }}>Workout</h1>
           <p style={{ fontSize: 14, color: '#a3a3a3' }}>Temukan latihan berdasarkan kelompok otot atau tipe gerakan.</p>

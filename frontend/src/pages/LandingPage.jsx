@@ -95,8 +95,8 @@ export default function LandingPage() {
                 cursor: 'pointer', fontSize: 14, fontWeight: 500, fontFamily: 'inherit',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={e => { e.target.style.borderColor = '#22c55e'; e.target.style.color = '#22c55e' }}
-              onMouseLeave={e => { e.target.style.borderColor = 'rgba(255,255,255,0.2)'; e.target.style.color = '#f5f5f5' }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = '#22c55e'; e.currentTarget.style.color = '#22c55e' }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = '#f5f5f5' }}
             >
               Masuk
             </button>
@@ -127,7 +127,7 @@ export default function LandingPage() {
           <p style={{ fontSize: 18, color: '#a3a3a3', maxWidth: 540, lineHeight: 1.7, marginBottom: 40 }}>
             Program latihan personal, nutrisi tepat sasaran, dan pendampingan AI aktif 24 jam. Capai tubuh impianmu lebih cepat.
           </p>
-          <div style={{ display: 'flex', gap: 14 }}>
+          <div className="hero-buttons" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
             <button onClick={() => navigate('/register')} className="btn-charger btn-charger-large">
               Mulai Sekarang
             </button>
@@ -139,8 +139,8 @@ export default function LandingPage() {
                 backdropFilter: 'blur(8px)',
                 transition: 'all 0.2s',
               }}
-              onMouseEnter={e => e.target.style.background = 'rgba(255,255,255,0.12)'}
-              onMouseLeave={e => e.target.style.background = 'rgba(255,255,255,0.07)'}
+              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
+              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
             >
               Pelajari Fitur
             </button>
@@ -158,8 +158,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── STATS ─────────────────────────────────────────── */}
-      <section className="section-px py-12" style={{
+      {/* ── STATS (Desktop only) ───────────────────────────── */}
+      <section className="section-px py-12 stats-section" style={{
         background: '#111111',
         borderTop: '1px solid #1e1e1e',
         borderBottom: '1px solid #1e1e1e',
@@ -249,7 +249,6 @@ export default function LandingPage() {
                 overflow: 'hidden',
                 position: 'relative'
               }}>
-                {/* Gunakan gambar dari data array c.image */}
                 <img src={c.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={c.name} />
               </div>
               <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: '#f5f5f5' }}>{c.name}</h3>
@@ -296,23 +295,13 @@ export default function LandingPage() {
         <div style={{ fontSize: 12, color: '#525252' }}>
           Platform Kebugaran dan Nutrisi Berbasis Kecerdasan Buatan
         </div>
-
       </footer>
 
       {/* ── FLOATING CHAT BUTTON ──────────────────────────── */}
       <button
         onClick={() => navigate('/login')}
         title="Mulai Chat dengan AI"
-        style={{
-          position: 'fixed', bottom: 32, right: 32, zIndex: 999,
-          width: 58, height: 58, borderRadius: '50%',
-          background: '#22c55e', border: 'none',
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          cursor: 'pointer', boxShadow: '0 0 24px rgba(34,197,94,0.5)',
-          transition: 'all 0.2s',
-        }}
-        onMouseEnter={e => { e.currentTarget.style.background = '#16a34a'; e.currentTarget.style.transform = 'scale(1.1)'; e.currentTarget.style.boxShadow = '0 0 36px rgba(34,197,94,0.7)' }}
-        onMouseLeave={e => { e.currentTarget.style.background = '#22c55e'; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 0 24px rgba(34,197,94,0.5)' }}
+        className="floating-chat-btn"
       >
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
@@ -326,12 +315,45 @@ export default function LandingPage() {
         .py-24 { padding-top: 100px; padding-bottom: 100px; }
         .py-8 { padding-top: 36px; padding-bottom: 36px; }
 
+        /* ── Animated Floating Chat Button ── */
+        .floating-chat-btn {
+          position: fixed; bottom: 32px; right: 32px; z-index: 999;
+          width: 58px; height: 58px; border-radius: 50%;
+          background: #22c55e; border: none;
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 0 0 0 rgba(34,197,94,0.5);
+          animation: chat-pulse 2.5s infinite;
+          transition: transform 0.2s ease, background 0.2s ease;
+        }
+        .floating-chat-btn:hover {
+          background: #16a34a;
+          transform: scale(1.12);
+          animation: none;
+          box-shadow: 0 0 36px rgba(34,197,94,0.8);
+        }
+        @keyframes chat-pulse {
+          0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); transform: scale(1); }
+          50%  { box-shadow: 0 0 0 14px rgba(34,197,94,0); transform: scale(1.05); }
+          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); transform: scale(1); }
+        }
+
         @media (max-width: 768px) {
           .nav-container { padding: 16px 20px; }
           .section-px { padding-left: 20px; padding-right: 20px; }
           .py-12 { padding-top: 32px; padding-bottom: 32px; }
           .py-24 { padding-top: 60px; padding-bottom: 60px; }
           .py-8 { padding-top: 24px; padding-bottom: 24px; }
+
+          /* Sembunyikan stats di mobile */
+          .stats-section { display: none !important; }
+
+          /* Button hero responsif */
+          .hero-buttons { flex-direction: column; }
+          .hero-buttons button { width: 100%; text-align: center; justify-content: center; }
+
+          /* Floating chat button mobile */
+          .floating-chat-btn { bottom: 20px; right: 20px; width: 52px; height: 52px; }
         }
 
         @keyframes bounce {

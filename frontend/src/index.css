@@ -233,3 +233,47 @@ body {
   letter-spacing: 0.06em;
   margin-top: 4px;
 }
+
+/* Dashboard main content */
+.dashboard-main {
+  margin-left: 220px;
+  flex: 1;
+  padding: 32px 36px;
+}
+
+/* Chat sessions sidebar (desktop) */
+.chat-sessions-sidebar {
+  width: 240px;
+  min-height: 100vh;
+  margin-left: 220px;
+  background: #111111;
+  border-right: 1px solid #2a2a2a;
+  display: flex;
+  flex-direction: column;
+  padding: 20px 12px;
+  position: fixed;
+  left: 0;
+  top: 0;
+}
+
+/* Chat main area (desktop) */
+.chat-main {
+  margin-left: 460px;
+  flex: 1;
+}
+
+@media (max-width: 768px) {
+  .dashboard-main {
+    margin-left: 0;
+    padding: 80px 16px 24px;
+  }
+
+  /* Di mobile, sembunyikan chat sessions sidebar dan biarkan chat area full width */
+  .chat-sessions-sidebar {
+    display: none;
+  }
+  .chat-main {
+    margin-left: 0;
+    padding-top: 56px; /* top bar */
+  }
+}

@@ -138,12 +138,7 @@ export default function ChatPage({ user }) {
       <Sidebar username={user?.username} />
 
       {/* Sessions sidebar */}
-      <aside style={{
-        width: 240, minHeight: '100vh', marginLeft: 220,
-        background: '#111111', borderRight: '1px solid #2a2a2a',
-        display: 'flex', flexDirection: 'column', padding: '20px 12px',
-        position: 'fixed', left: 0, top: 0,
-      }}>
+      <aside className="chat-sessions-sidebar">
         <div style={{ paddingLeft: 2, marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
             Riwayat Chat
@@ -190,7 +185,7 @@ export default function ChatPage({ user }) {
       </aside>
 
       {/* Chat area */}
-      <main style={{ marginLeft: 460, flex: 1, display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+      <main className="chat-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
         {/* Messages */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           {messages.length === 0 && (
