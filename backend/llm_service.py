@@ -7,10 +7,11 @@ import logging
 import re
 from typing import AsyncGenerator
 
+import httpx
 from google import genai
 from google.genai import types
 
-from config import GEMINI_API_KEY, GEMINI_MODEL
+from config import GEMINI_API_KEY, GEMINI_MODEL, GROQ_API_KEY, GROQ_MODEL
 from data_loader import (
     ds, search_workout, search_foods, search_foods_allergen_free,
     search_programs, get_user_stats_summary
@@ -270,7 +271,7 @@ async def chat_stream(
     user_profile: dict = None
 ) -> AsyncGenerator[str, None]:
     """
-    Stream respons dari Gemini API menggunakan google-genai SDK terbaru.
+    Stream respons dari LLM (Groq atau Gemini).
 
     Args:
         message: Pesan user terbaru
@@ -280,8 +281,8 @@ async def chat_stream(
     Yields:
         String chunks dari LLM response
     """
-    if client is None:
-        yield "ERROR: GEMINI_API_KEY belum diset. Silakan isi file .env dengan API key dari https://aistudio.google.com/app/apikey"
+    if not GROQ_API_KEY and client is None:
+        yield "ERROR: API KEY belum diset. Silakan isi file .env"
         return
 
     try:
@@ -301,39 +302,80 @@ async def chat_stream(
                 f"---"
             )
 
-        # 3. Build conversation history untuk google-genai format
-        history = []
-        for msg in chat_history[-10:]:
-            role = "user" if msg.get("role") == "user" else "model"
-            history.append(
-                types.Content(
-                    role=role,
-                    parts=[types.Part(text=msg.get("content", ""))]
-                )
-            )
+        if GROQ_API_KEY:
+            # Menggunakan Groq API via httpx
+            history = [{"role": "system", "content": SYSTEM_PROMPT}]
+            for msg in chat_history[-10:]:
+                role = "user" if msg.get("role") == "user" else "assistant"
+                history.append({"role": role, "content": msg.get("content", "")})
+            history.append({"role": "user", "content": augmented_message})
 
-        # 4. Stream response
-        response = await client.aio.models.generate_content_stream(
-            model=GEMINI_MODEL,
-            contents=history + [
-                types.Content(
-                    role="user",
-                    parts=[types.Part(text=augmented_message)]
+            async with httpx.AsyncClient() as http_client:
+                async with http_client.stream(
+                    "POST",
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    json={
+                        "model": GROQ_MODEL,
+                        "messages": history,
+                        "temperature": 0.7,
+                        "stream": True
+                    },
+                    headers={
+                        "Authorization": f"Bearer {GROQ_API_KEY}",
+                        "Content-Type": "application/json"
+                    },
+                    timeout=60.0
+                ) as response:
+                    if response.status_code != 200:
+                        error_body = await response.aread()
+                        yield f"\n\nMaaf, terjadi error dari Groq API: {error_body.decode('utf-8')}"
+                        return
+                    
+                    async for line in response.aiter_lines():
+                        if line.startswith("data: "):
+                            data_str = line[6:].strip()
+                            if data_str == "[DONE]":
+                                break
+                            try:
+                                data = json.loads(data_str)
+                                content = data["choices"][0]["delta"].get("content", "")
+                                if content:
+                                    yield content
+                            except Exception:
+                                pass
+        else:
+            # Menggunakan Gemini API
+            history = []
+            for msg in chat_history[-10:]:
+                role = "user" if msg.get("role") == "user" else "model"
+                history.append(
+                    types.Content(
+                        role=role,
+                        parts=[types.Part(text=msg.get("content", ""))]
+                    )
                 )
-            ],
-            config=types.GenerateContentConfig(
-                system_instruction=SYSTEM_PROMPT,
-                temperature=0.7,
-                top_p=0.95,
-                max_output_tokens=2048,
-            ),
-        )
-        async for chunk in response:
-            if chunk.text:
-                yield chunk.text
+
+            response = await client.aio.models.generate_content_stream(
+                model=GEMINI_MODEL,
+                contents=history + [
+                    types.Content(
+                        role="user",
+                        parts=[types.Part(text=augmented_message)]
+                    )
+                ],
+                config=types.GenerateContentConfig(
+                    system_instruction=SYSTEM_PROMPT,
+                    temperature=0.7,
+                    top_p=0.95,
+                    max_output_tokens=2048,
+                ),
+            )
+            async for chunk in response:
+                if chunk.text:
+                    yield chunk.text
 
     except Exception as e:
-        logger.error(f"Gemini API error: {e}")
+        logger.error(f"LLM API error: {e}")
         yield f"\n\nMaaf, terjadi error: {str(e)}. Silakan coba lagi."
 
 

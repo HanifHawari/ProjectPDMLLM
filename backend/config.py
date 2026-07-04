@@ -17,6 +17,13 @@ GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 # ==============================================================
+# Groq API
+# ==============================================================
+GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
+GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
+
+
+# ==============================================================
 # App
 # ==============================================================
 APP_ENV: str = os.getenv("APP_ENV", "development")
