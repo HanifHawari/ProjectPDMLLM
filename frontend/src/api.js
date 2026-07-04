@@ -1,8 +1,9 @@
 import axios from 'axios'
 
 const api = axios.create({
-  // URL backend Railway di-hardcode langsung agar lebih mudah
-  baseURL: 'https://projectpdmllm-production.up.railway.app/api',
+  // URL akan otomatis mengambil dari .env lokal saat development, 
+  // atau menggunakan URL Railway jika tidak ada di .env (saat di-deploy)
+  baseURL: import.meta.env.VITE_API_URL || 'https://projectpdmllm-production.up.railway.app/api',
   timeout: 30000,
 })
 
