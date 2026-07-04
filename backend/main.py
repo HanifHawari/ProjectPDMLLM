@@ -4,16 +4,21 @@ Startup → load datasets → register routers → run
 """
 import logging
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import StreamingResponse, JSONResponse
+from fastapi.responses import FileResponse, JSONResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import ValidationError
 
 from config import APP_HOST, APP_PORT, ALLOWED_ORIGINS
 from data_loader import load_all_datasets
 from database.db_engine import init_db
 from routers import chat, workout, nutrition, programs, dashboard, users
+
+# Direktori hasil build frontend (frontend/dist → di-copy ke backend/dist saat build)
+FRONTEND_DIST = Path(__file__).parent / "dist"
 
 # ==============================================================
 # Logging Setup
@@ -73,18 +78,8 @@ app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"]
 
 
 # ==============================================================
-# Root & Health Check
+# Health Check (khusus API, tidak diganggu oleh SPA catch-all)
 # ==============================================================
-@app.get("/", tags=["Health"])
-async def root():
-    return {
-        "app": "FitMind AI",
-        "version": "1.0.0",
-        "status": "running",
-        "docs": "/docs"
-    }
-
-
 @app.get("/health", tags=["Health"])
 async def health_check():
     from data_loader import ds
@@ -104,6 +99,32 @@ async def health_check():
             "user_profiles_rows": len(ds.user_profiles) if ds.user_profiles is not None else 0,
         }
     }
+
+
+# ==============================================================
+# Static Files (Frontend React — hanya aktif jika sudah di-build)
+# ==============================================================
+if FRONTEND_DIST.exists():
+    logger.info(f"Serving frontend dari: {FRONTEND_DIST}")
+    # Serve file statis (JS, CSS, gambar, video, dll)
+    app.mount("/assets", StaticFiles(directory=FRONTEND_DIST / "assets"), name="assets")
+
+    # SPA catch-all: semua route yang bukan /api/* diarahkan ke index.html
+    # Ini harus didaftarkan TERAKHIR agar tidak menimpa route API
+    @app.get("/{full_path:path}", include_in_schema=False)
+    async def serve_spa(full_path: str):
+        # Cek apakah ada file statis langsung (favicon.ico, .mp4, .png, dll)
+        file_path = FRONTEND_DIST / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(file_path)
+        # Fallback ke index.html untuk SPA routing (React Router)
+        return FileResponse(FRONTEND_DIST / "index.html")
+else:
+    logger.warning("Frontend dist/ tidak ditemukan. Jalankan: cd frontend && npm run build")
+
+    @app.get("/", tags=["Health"])
+    async def root():
+        return {"app": "FitMind AI", "version": "1.0.0", "status": "running", "docs": "/docs"}
 
 
 # ==============================================================

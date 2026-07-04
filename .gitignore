@@ -13,6 +13,9 @@ backend/.env
 # SQLite database
 backend/*.db
 
+# Hasil build frontend (di-generate Railway saat deploy, tidak perlu di-commit)
+backend/dist/
+
 # Dataset besar (>100MB - tidak bisa di-push ke GitHub)
 dataset/program/cleaned_programs_detailed.csv
 dataset/program/programs_detailed_boostcamp_kaggle.csv
