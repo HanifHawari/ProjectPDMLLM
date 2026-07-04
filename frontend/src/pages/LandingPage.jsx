@@ -53,6 +53,7 @@ export default function LandingPage() {
           loop
           muted
           playsInline
+          poster="/gym_hero_bg.png"
           style={{
             position: 'absolute', inset: 0,
             width: '100%', height: '100%', objectFit: 'cover',
@@ -78,10 +79,9 @@ export default function LandingPage() {
         }} />
 
         {/* Navbar */}
-        <nav style={{
+        <nav className="nav-container" style={{
           position: 'absolute', top: 0, left: 0, right: 0,
           display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          padding: '24px 60px',
           zIndex: 10,
         }}>
           <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>
@@ -107,7 +107,7 @@ export default function LandingPage() {
         </nav>
 
         {/* Hero content */}
-        <div style={{ position: 'relative', zIndex: 5, padding: '0 60px', maxWidth: 760 }}>
+        <div className="section-px" style={{ position: 'relative', zIndex: 5, maxWidth: 760 }}>
           <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>
             Platform Kebugaran Berbasis AI
           </div>
@@ -159,11 +159,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── STATS ─────────────────────────────────────────── */}
-      <section style={{
+      <section className="section-px py-12" style={{
         background: '#111111',
         borderTop: '1px solid #1e1e1e',
         borderBottom: '1px solid #1e1e1e',
-        padding: '48px 60px',
         display: 'flex',
         justifyContent: 'space-around',
         flexWrap: 'wrap',
@@ -182,7 +181,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FEATURES ──────────────────────────────────────── */}
-      <section id="fitur" style={{ padding: '100px 60px', maxWidth: 1100, margin: '0 auto' }}>
+      <section id="fitur" className="section-px py-24" style={{ maxWidth: 1100, margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
             Fitur Unggulan
@@ -200,7 +199,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── HOW IT WORKS ──────────────────────────────────── */}
-      <section style={{ padding: '100px 60px', background: '#0a0a0a', borderTop: '1px solid #1e1e1e' }}>
+      <section className="section-px py-24" style={{ background: '#0a0a0a', borderTop: '1px solid #1e1e1e' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
             Proses Sederhana
@@ -230,7 +229,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── CREATORS ──────────────────────────────────── */}
-      <section style={{ padding: '100px 60px', background: '#111111', borderTop: '1px solid #1e1e1e' }}>
+      <section className="section-px py-24" style={{ background: '#111111', borderTop: '1px solid #1e1e1e' }}>
         <div style={{ textAlign: 'center', marginBottom: 64 }}>
           <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
             Tim Pengembang
@@ -261,11 +260,10 @@ export default function LandingPage() {
       </section>
 
       {/* ── CTA SECTION ───────────────────────────────────── */}
-      <section style={{
+      <section className="section-px py-24" style={{
         background: 'linear-gradient(135deg, #111 0%, #0a1a10 50%, #111 100%)',
         borderTop: '1px solid #1e1e1e',
         borderBottom: '1px solid #1e1e1e',
-        padding: '100px 60px',
         textAlign: 'center',
       }}>
         <div style={{
@@ -291,7 +289,7 @@ export default function LandingPage() {
       </section>
 
       {/* ── FOOTER ────────────────────────────────────────── */}
-      <footer style={{ background: '#0a0a0a', borderTop: '1px solid #1a1a1a', padding: '36px 60px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+      <footer className="section-px py-8" style={{ background: '#0a0a0a', borderTop: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
         <div style={{ fontSize: 18, fontWeight: 700 }}>
           FitMind<span style={{ color: '#22c55e' }}>AI</span>
         </div>
@@ -322,6 +320,20 @@ export default function LandingPage() {
       </button>
 
       <style>{`
+        .nav-container { padding: 24px 60px; }
+        .section-px { padding-left: 60px; padding-right: 60px; }
+        .py-12 { padding-top: 48px; padding-bottom: 48px; }
+        .py-24 { padding-top: 100px; padding-bottom: 100px; }
+        .py-8 { padding-top: 36px; padding-bottom: 36px; }
+
+        @media (max-width: 768px) {
+          .nav-container { padding: 16px 20px; }
+          .section-px { padding-left: 20px; padding-right: 20px; }
+          .py-12 { padding-top: 32px; padding-bottom: 32px; }
+          .py-24 { padding-top: 60px; padding-bottom: 60px; }
+          .py-8 { padding-top: 24px; padding-bottom: 24px; }
+        }
+
         @keyframes bounce {
           0%, 100% { transform: translateX(-50%) translateY(0); }
           50% { transform: translateX(-50%) translateY(8px); }
