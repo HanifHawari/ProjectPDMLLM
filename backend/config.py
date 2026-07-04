@@ -54,7 +54,12 @@ DATABASE_URL: str = os.getenv(
 # ==============================================================
 # CORS
 # ==============================================================
-ALLOWED_ORIGINS: list[str] = os.getenv(
-    "ALLOWED_ORIGINS",
-    "http://localhost:3000,http://localhost:5173"
-).split(",")
+# Set ALLOWED_ORIGINS di Railway Variables, pisahkan dengan koma.
+# Contoh: https://frontend-fitmind.up.railway.app,http://localhost:5173
+# Jika tidak diset, default mengizinkan semua origin (aman untuk testing).
+_origins_raw: str = os.getenv("ALLOWED_ORIGINS", "*")
+if _origins_raw == "*":
+    ALLOWED_ORIGINS: list[str] = ["*"]
+else:
+    ALLOWED_ORIGINS: list[str] = [o.strip() for o in _origins_raw.split(",")]
+
