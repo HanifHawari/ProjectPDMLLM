@@ -299,7 +299,7 @@ export default function LandingPage() {
 
       {/* ── FLOATING CHAT BUTTON ──────────────────────────── */}
       <button
-        onClick={() => navigate('/login')}
+        onClick={() => navigate('/chat')}
         title="Mulai Chat dengan AI"
         className="floating-chat-btn"
       >
@@ -347,6 +347,13 @@ export default function LandingPage() {
 
           /* Sembunyikan stats di mobile */
           .stats-section { display: none !important; }
+
+          /* Navbar responsif */
+          .nav-container button { padding: 6px 14px !important; font-size: 13px !important; }
+          .nav-container > div:first-child { font-size: 20px !important; }
+          
+          /* Button CTA responsif */
+          .btn-charger-xl { width: 100%; display: block; box-sizing: border-box; text-align: center; }
 
           /* Button hero responsif */
           .hero-buttons { flex-direction: column; }

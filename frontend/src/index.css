@@ -193,6 +193,40 @@ body {
 .animate-fadeinup { animation: fadeInUp 0.4s ease forwards; }
 .animate-pulse-green { animation: pulse-green 2s infinite; }
 
+.typing-indicator {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 2px;
+}
+.typing-indicator span {
+  width: 6px;
+  height: 6px;
+  background-color: #22c55e;
+  border-radius: 50%;
+  animation: typing-dot 1.4s infinite ease-in-out both;
+}
+.typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+.typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+
+@keyframes typing-dot {
+  0%, 80%, 100% { transform: scale(0); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* Blinking cursor for typing effect */
+.prose-chat.streaming > *:last-child::after {
+  content: ' ▌';
+  color: #22c55e;
+  animation: blink 1s step-end infinite;
+  display: inline-block;
+  vertical-align: baseline;
+}
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
 /* Sidebar nav item */
 .nav-item {
   display: flex;
@@ -268,12 +302,39 @@ body {
     padding: 80px 16px 24px;
   }
 
-  /* Di mobile, sembunyikan chat sessions sidebar dan biarkan chat area full width */
+  /* Mobile chat sessions sidebar as a sliding drawer */
   .chat-sessions-sidebar {
-    display: none;
+    display: flex;
+    position: fixed;
+    top: 56px; /* Below mobile nav bar */
+    left: 0;
+    width: 260px;
+    height: calc(100vh - 56px);
+    margin-left: 0;
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    box-shadow: 2px 0 10px rgba(0,0,0,0.5);
+  }
+  .chat-sessions-sidebar.open {
+    transform: translateX(0);
+  }
+  .mobile-history-toggle {
+    display: flex;
   }
   .chat-main {
     margin-left: 0;
     padding-top: 56px; /* top bar */
   }
+  /* Adjust chat padding on mobile */
+  .chat-main > div:nth-child(2) {
+    padding: 20px 16px !important;
+  }
+  .chat-main > div:last-child {
+    padding: 12px 16px 20px !important;
+  }
+}
+
+.mobile-history-toggle {
+  display: none;
 }

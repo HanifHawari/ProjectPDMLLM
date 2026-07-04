@@ -40,6 +40,7 @@ export default function RegisterPage() {
       justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden',
+      padding: '0 20px',
     }}>
       {/* Background gradient blobs */}
       <div style={{
@@ -55,7 +56,7 @@ export default function RegisterPage() {
         bottom: '-80px', left: '-80px', pointerEvents: 'none',
       }} />
 
-      <div className="card animate-fadeinup" style={{ width: 400, padding: 40 }}>
+      <div className="card animate-fadeinup" style={{ width: '100%', maxWidth: 400, padding: 40 }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 8 }}>

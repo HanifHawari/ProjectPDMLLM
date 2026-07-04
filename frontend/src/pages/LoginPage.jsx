@@ -44,6 +44,7 @@ export default function LoginPage() {
       justifyContent: 'center',
       position: 'relative',
       overflow: 'hidden',
+      padding: '0 20px',
     }}>
       {/* Background gradient blobs */}
       <div style={{
@@ -59,7 +60,24 @@ export default function LoginPage() {
         bottom: '-80px', left: '-80px', pointerEvents: 'none',
       }} />
 
-      <div className="card animate-fadeinup" style={{ width: 400, padding: 40 }}>
+      {/* Back Button */}
+      <button 
+        onClick={() => navigate('/')}
+        className="btn-ghost"
+        style={{
+          position: 'absolute',
+          top: 32,
+          left: 32,
+          display: 'flex',
+          alignItems: 'center',
+          gap: 8,
+          zIndex: 10,
+        }}
+      >
+        <span style={{ fontSize: 16, lineHeight: 1 }}>←</span> Kembali ke Beranda
+      </button>
+
+      <div className="card animate-fadeinup" style={{ width: '100%', maxWidth: 400, padding: 40 }}>
         {/* Header */}
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 8 }}>

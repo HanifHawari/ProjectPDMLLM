@@ -3,12 +3,51 @@ import Sidebar from '../components/Sidebar'
 import ReactMarkdown from 'react-markdown'
 import api from '../api'
 
+function TypewriterMarkdown({ content, streaming }) {
+  const [displayedContent, setDisplayedContent] = useState('');
+
+  useEffect(() => {
+    if (!streaming) {
+      setDisplayedContent(content);
+      return;
+    }
+
+    if (displayedContent.length >= content.length) return;
+
+    // Calculate how many characters to add to catch up smoothly
+    const diff = content.length - displayedContent.length;
+    // Kurangi rasio catch-up agar lebih sering mengetik 1-1
+    const charsToAdd = Math.max(1, Math.floor(diff / 30));
+
+    // Perbesar timeout untuk memperlambat efek ketik (misal 40ms)
+    const timeout = setTimeout(() => {
+      setDisplayedContent(prev => content.slice(0, prev.length + charsToAdd));
+    }, 40);
+
+    return () => clearTimeout(timeout);
+  }, [content, streaming, displayedContent]);
+
+  // If streaming is done but we still haven't displayed everything, force it.
+  useEffect(() => {
+    if (!streaming && displayedContent !== content) {
+      setDisplayedContent(content);
+    }
+  }, [streaming, content, displayedContent]);
+
+  return (
+    <div className={`prose-chat ${streaming ? 'streaming' : ''}`}>
+      <ReactMarkdown>{displayedContent}</ReactMarkdown>
+    </div>
+  );
+}
+
 export default function ChatPage({ user }) {
   const [sessions, setSessions] = useState([])
   const [activeSessionId, setActiveSessionId] = useState(null)
   const [messages, setMessages] = useState([])
   const [input, setInput] = useState('')
   const [streaming, setStreaming] = useState(false)
+  const [mobileHistoryOpen, setMobileHistoryOpen] = useState(false)
   const bottomRef = useRef(null)
   const username = user?.username
 
@@ -29,6 +68,7 @@ export default function ChatPage({ user }) {
 
   async function loadSessionMessages(sessionId) {
     setActiveSessionId(sessionId)
+    setMobileHistoryOpen(false)
     try {
       const res = await api.get(`/users/${username}/sessions/${sessionId}/messages`)
       const data = res.data.data
@@ -59,10 +99,7 @@ export default function ChatPage({ user }) {
         user_profile: JSON.parse(localStorage.getItem('fitmind_profile') || 'null'),
       }
 
-      const baseURL = api.defaults.baseURL || ''
-      const fetchUrl = baseURL ? `${baseURL}/chat/session/stream` : '/api/chat/session/stream'
-
-      const response = await fetch(fetchUrl, {
+      const response = await fetch('/api/chat/session/stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -118,6 +155,7 @@ export default function ChatPage({ user }) {
   function newChat() {
     setActiveSessionId(null)
     setMessages([])
+    setMobileHistoryOpen(false)
   }
 
   async function deleteSession(sessionId, e) {
@@ -140,8 +178,16 @@ export default function ChatPage({ user }) {
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar username={user?.username} />
 
+      {/* Mobile Backdrop */}
+      {mobileHistoryOpen && (
+        <div 
+          onClick={() => setMobileHistoryOpen(false)}
+          style={{ position: 'fixed', inset: 0, top: 56, background: 'rgba(0,0,0,0.6)', zIndex: 99 }}
+        />
+      )}
+
       {/* Sessions sidebar */}
-      <aside className="chat-sessions-sidebar">
+      <aside className={`chat-sessions-sidebar ${mobileHistoryOpen ? 'open' : ''}`}>
         <div style={{ paddingLeft: 2, marginBottom: 16 }}>
           <div style={{ fontSize: 12, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.07em', marginBottom: 10 }}>
             Riwayat Chat
@@ -189,6 +235,25 @@ export default function ChatPage({ user }) {
 
       {/* Chat area */}
       <main className="chat-main" style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh' }}>
+        {/* Mobile History Toggle Header */}
+        <div className="mobile-history-toggle" style={{
+          padding: '12px 20px',
+          borderBottom: '1px solid #2a2a2a',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          background: '#0a0a0a',
+        }}>
+          <span style={{ fontSize: 13, fontWeight: 600, color: '#a3a3a3' }}>
+            {activeSessionId ? 'Percakapan Aktif' : 'Percakapan Baru'}
+          </span>
+          <button onClick={() => setMobileHistoryOpen(true)} style={{
+            background: 'rgba(34,197,94,0.1)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.25)',
+            padding: '6px 12px', borderRadius: 6, fontSize: 12, fontWeight: 600, cursor: 'pointer'
+          }}>
+            Riwayat Chat
+          </button>
+        </div>
+
         {/* Messages */}
         <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           {messages.length === 0 && (
@@ -241,14 +306,25 @@ export default function ChatPage({ user }) {
                 lineHeight: 1.65,
               }}>
                 {msg.role === 'assistant' ? (
-                  <div className="prose-chat">
-                    <ReactMarkdown>{msg.content || (streaming && i === messages.length - 1 ? '...' : '')}</ReactMarkdown>
-                  </div>
+                  msg.content ? (
+                    i === messages.length - 1 ? (
+                      <TypewriterMarkdown content={msg.content} streaming={streaming} />
+                    ) : (
+                      <div className="prose-chat">
+                        <ReactMarkdown>{msg.content}</ReactMarkdown>
+                      </div>
+                    )
+                  ) : (
+                    streaming && i === messages.length - 1 && (
+                      <div className="prose-chat streaming">
+                        <div className="typing-indicator">
+                          <span></span><span></span><span></span>
+                        </div>
+                      </div>
+                    )
+                  )
                 ) : (
                   <span style={{ color: '#f5f5f5' }}>{msg.content}</span>
-                )}
-                {streaming && i === messages.length - 1 && msg.role === 'assistant' && msg.content === '' && (
-                  <span style={{ color: '#22c55e' }}>...</span>
                 )}
               </div>
             </div>
@@ -270,7 +346,11 @@ export default function ChatPage({ user }) {
               value={input}
               onChange={e => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
-              style={{ resize: 'none', minHeight: 44, maxHeight: 120, overflowY: 'auto', lineHeight: '1.5' }}
+              disabled={streaming}
+              style={{ 
+                resize: 'none', minHeight: 44, maxHeight: 120, overflowY: 'auto', 
+                lineHeight: '1.5', opacity: streaming ? 0.6 : 1, cursor: streaming ? 'not-allowed' : 'text' 
+              }}
             />
             <button className="btn-primary" onClick={sendMessage} disabled={streaming || !input.trim()}
               style={{ padding: '11px 20px', flexShrink: 0 }}>

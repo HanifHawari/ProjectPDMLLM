@@ -83,7 +83,7 @@ export default function ProfilePage({ user, onProfileSaved }) {
       if (onProfileSaved) onProfileSaved()
 
       setSaved(true)
-      setTimeout(() => navigate('/'), 1200)
+      setTimeout(() => navigate('/dashboard'), 1200)
     } catch (_) {}
     setLoading(false)
   }
