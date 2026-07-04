@@ -59,7 +59,10 @@ export default function ChatPage({ user }) {
         user_profile: JSON.parse(localStorage.getItem('fitmind_profile') || 'null'),
       }
 
-      const response = await fetch('/api/chat/session/stream', {
+      const baseURL = api.defaults.baseURL || ''
+      const fetchUrl = baseURL ? `${baseURL}/chat/session/stream` : '/api/chat/session/stream'
+
+      const response = await fetch(fetchUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),

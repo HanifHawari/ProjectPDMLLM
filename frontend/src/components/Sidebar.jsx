@@ -16,8 +16,9 @@ export default function Sidebar({ username }) {
   function handleLogout() {
     localStorage.removeItem('fitmind_user')
     localStorage.removeItem('fitmind_profile')
+    setMobileOpen(false)
     // Memaksa reload halaman agar state React (user) benar-benar terhapus
-    window.location.href = '/'
+    window.location.href = '/login'
   }
 
   return (
@@ -102,6 +103,7 @@ export default function Sidebar({ username }) {
           left: 0;
           z-index: 200;
           overflow-y: auto;
+          box-sizing: border-box;
         }
         .sidebar-logo {
           padding-left: 14px;
@@ -121,7 +123,7 @@ export default function Sidebar({ username }) {
             height: calc(100dvh - 56px); /* gunakan dvh agar tidak tertutup browser UI bawah */
             transform: translateX(-100%);
             transition: transform 0.3s ease;
-            padding-bottom: 32px; /* berikan ruang ekstra di bawah agar logout tidak tenggelam */
+            padding-bottom: 24px; /* sesuaikan padding agar pas */
           }
           .sidebar-aside.sidebar-open {
             transform: translateX(0);
