@@ -47,24 +47,36 @@ def _compute_bmi(weight_kg: Optional[float], height_m: Optional[float]) -> Optio
 # POST /login — get-or-create user
 # ==============================================================
 @router.post("/login", response_model=UserResponse)
-async def login_or_register(body: UserCreate, db: Session = Depends(get_db)):
+async def login(body: UserCreate, db: Session = Depends(get_db)):
     """
-    Masuk / daftar berdasarkan username.
-    - Jika username sudah ada → kembalikan data user lama (is_new=False)
-    - Jika belum ada → buat user baru otomatis (is_new=True)
-    Tidak ada password — identifikasi hanya berdasarkan username.
+    Masuk berdasarkan username.
+    Jika tidak ada → 404.
     """
     username = body.username.strip()
-
     existing = db.query(User).filter(User.username == username).first()
+    
+    if not existing:
+        raise HTTPException(status_code=404, detail="Username tidak ditemukan. Silakan daftar terlebih dahulu.")
+
+    logger.info(f"User login: '{username}' (id={existing.id})")
+    return UserResponse(
+        id=existing.id,
+        username=existing.username,
+        is_new=False,
+        has_profile=existing.profile is not None
+    )
+
+@router.post("/register", response_model=UserResponse)
+async def register(body: UserCreate, db: Session = Depends(get_db)):
+    """
+    Daftar berdasarkan username.
+    Jika sudah ada → 400.
+    """
+    username = body.username.strip()
+    existing = db.query(User).filter(User.username == username).first()
+    
     if existing:
-        logger.info(f"User login: '{username}' (id={existing.id})")
-        return UserResponse(
-            id=existing.id,
-            username=existing.username,
-            is_new=False,
-            has_profile=existing.profile is not None
-        )
+        raise HTTPException(status_code=400, detail="Username sudah terdaftar. Silakan login.")
 
     # Buat user baru
     new_user = User(username=username)
