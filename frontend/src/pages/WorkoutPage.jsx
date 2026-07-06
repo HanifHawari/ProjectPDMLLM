@@ -349,8 +349,15 @@ function ProgramsTab() {
 
 /* ─── Exercise Card dengan Gambar Placeholder ──────────── */
 function ExerciseCard({ exercise }) {
-  const name = exercise.exercise_name || exercise.name || 'Gerakan'
-  const bodyPart = exercise.body_part || ''
+  const name = exercise.exercise_name || exercise.name || exercise.Workout || 'Gerakan'
+  const bodyPart = exercise.body_part || exercise['Body Part'] || ''
+
+  // Membuat format nama file yang aman (huruf kecil, ganti spasi/karakter khusus dengan strip)
+  const imageFileName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.webp'
+  const imageUrl = `/workouts/${imageFileName}`
+  
+  // State untuk melacak jika gambar gagal dimuat (belum ada gambarnya)
+  const [imgError, setImgError] = useState(false)
 
   return (
     <div className="card exercise-card" style={{ overflow: 'hidden' }}>
@@ -373,20 +380,28 @@ function ExerciseCard({ exercise }) {
           background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.04) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
-        {/* SVG ilustrasi */}
-        <div style={{ width: 90, height: 90, position: 'relative', zIndex: 1 }}>
-          {getExerciseSVG(bodyPart)}
+        
+        {/* Area Gambar 3D atau SVG (Fallback) */}
+        <div style={{ width: 110, height: 110, position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          {!imgError ? (
+            <img 
+              src={imageUrl} 
+              alt={name}
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              onError={() => setImgError(true)}
+            />
+          ) : (
+            <div style={{ width: 90, height: 90 }}>
+              {getExerciseSVG(bodyPart)}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Info */}
       <div style={{ padding: '14px 16px' }}>
         <div style={{ fontSize: 14, fontWeight: 600, color: '#f5f5f5', marginBottom: 8, lineHeight: 1.3 }}>{name}</div>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: exercise.description ? 8 : 0 }}>
-          {bodyPart && <span className="badge-red">{bodyPart}</span>}
-          {exercise.equipment && <span className="badge-gray">{exercise.equipment}</span>}
-          {exercise.difficulty && <span className="badge-gray">{exercise.difficulty}</span>}
-        </div>
+
         {exercise.description && (
           <div style={{ fontSize: 12, color: '#525252', lineHeight: 1.5 }}>
             {exercise.description.substring(0, 90)}{exercise.description.length > 90 ? '...' : ''}
