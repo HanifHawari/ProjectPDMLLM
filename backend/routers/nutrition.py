@@ -5,7 +5,7 @@ from fastapi import APIRouter, Query
 from typing import Optional
 
 from data_loader import ds, search_foods, search_foods_allergen_free
-from models import APIResponse, FoodSearchRequest
+from models import APIResponse
 
 router = APIRouter()
 
@@ -154,13 +154,17 @@ async def generate_meal_plan(
 
 @router.get("/nutriscore-stats")
 async def get_nutriscore_distribution():
-    """Distribusi Nutriscore grade dari dietary dataset."""
-    if ds.dietary is None or ds.dietary.empty:
+    """Distribusi health score dari dataset makanan sehat."""
+    if ds.healthy_foods is None or ds.healthy_foods.empty:
         return APIResponse(success=False, message="Dataset tidak tersedia")
 
-    col = next((c for c in ds.dietary.columns if "nutriscore" in c.lower()), None)
-    if not col:
-        return APIResponse(success=False, data={}, message="Kolom nutriscore tidak ditemukan")
+    if "health_score" not in ds.healthy_foods.columns:
+        return APIResponse(success=False, data={}, message="Kolom health_score tidak ditemukan")
 
-    dist = ds.dietary[col].value_counts().to_dict()
+    # Buat distribusi: Excellent (80+), Good (60-79), Fair (40-59), Poor (<40)
+    df = ds.healthy_foods.copy()
+    df["score_category"] = df["health_score"].apply(
+        lambda s: "Excellent" if s >= 80 else ("Good" if s >= 60 else ("Fair" if s >= 40 else "Poor"))
+    )
+    dist = df["score_category"].value_counts().to_dict()
     return APIResponse(success=True, data=dist)

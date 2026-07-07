@@ -1,0 +1,105 @@
+"""
+FitMind AI — Fitness Agent
+Spesialis: Latihan gym, program workout, gerakan per body part.
+Persona: Personal Trainer profesional.
+"""
+from agents.base_agent import BaseAgent
+from data_loader import search_workout, search_programs
+
+
+class FitnessAgent(BaseAgent):
+    """
+    Agent spesialis kebugaran & latihan.
+
+    Dipanggil oleh SupervisorAgent untuk pertanyaan seputar:
+    - Gerakan/latihan per bagian tubuh (dada, punggung, kaki, dll)
+    - Rekomendasi program gym (beginner, intermediate, advanced)
+    - Teknik latihan yang benar
+    - Jadwal latihan mingguan
+    """
+
+    name = "FitnessAgent"
+    description = "Spesialis latihan gym, program workout, dan gerakan per body part."
+
+    system_prompt = """Kamu adalah Alex, Personal Trainer berpengalaman 10 tahun di FitMind Gym.
+
+KEPRIBADIAN:
+- Tegas, motivatif, dan profesional.
+- Hanya membahas topik gym, latihan, olahraga, dan kebugaran fisik.
+- Jika ditanya di luar topik kebugaran, tolak dengan singkat.
+
+KEMAMPUAN UTAMA:
+1. Merekomendasikan gerakan/latihan berdasarkan bagian tubuh atau kelompok otot.
+2. Membuat program latihan yang disesuaikan level pengguna (pemula, menengah, mahir).
+3. Menjelaskan teknik gerakan yang benar dan aman.
+4. Membuat jadwal latihan mingguan yang efektif.
+
+ATURAN FORMAT RESPONS:
+- Langsung ke poin, tanpa basa-basi.
+- Gunakan **bold** untuk nama gerakan.
+- Gunakan bullet points (•) untuk daftar.
+- Sertakan set dan repetisi jika merekomendasikan latihan.
+- Maksimal 1 emoji, atau tidak sama sekali.
+- Semua angka set/rep harus konkret (contoh: 3 set x 12 rep).
+
+ATURAN DATA:
+- Jika ada [KONTEKS DATA RELEVAN], WAJIB jadikan acuan utama.
+- Jangan mengarang data latihan yang tidak ada di konteks."""
+
+    def build_context(self, message: str, user_profile: dict = None) -> str:
+        """
+        Ambil data latihan relevan dari dataset untuk dijadikan konteks RAG.
+        """
+        context_parts = []
+
+        # Tambahkan profil user jika ada
+        if user_profile:
+            profile_str = "[PROFIL PENGGUNA]\n" + "\n".join(
+                f"- {k}: {v}" for k, v in user_profile.items() if v
+            )
+            context_parts.append(profile_str)
+
+        # Cari workout berdasarkan kata kunci di pesan
+        keywords = [
+            "dada", "chest", "punggung", "back", "kaki", "legs", "bahu", "shoulders",
+            "perut", "abs", "bicep", "tricep", "lengan", "arms", "paha", "hamstring",
+            "quad", "glute", "bokong", "betis", "calf", "core", "forearm"
+        ]
+        found_parts = [kw for kw in keywords if kw.lower() in message.lower()]
+
+        if found_parts:
+            workouts = search_workout(body_part=found_parts[0])
+            if not workouts:
+                workouts = search_workout()
+        else:
+            workouts = search_workout()
+
+        if workouts:
+            lines = ["[DATA LATIHAN TERSEDIA]"]
+            for w in workouts[:10]:
+                row_str = " | ".join(f"{k}: {v}" for k, v in w.items() if v)
+                lines.append(f"- {row_str}")
+            context_parts.append("\n".join(lines))
+
+        # Tambahkan data program jika relevan
+        msg_lower = message.lower()
+        if any(kw in msg_lower for kw in ["program", "jadwal", "rencana", "minggu", "week", "plan"]):
+            level = user_profile.get("experience_level", "") if user_profile else ""
+            programs = search_programs(level=level, limit=5)
+            if programs:
+                lines = ["[DATA PROGRAM LATIHAN TERSEDIA]"]
+                key_cols = ["title", "level", "goal", "equipment", "program_length",
+                            "time_per_workout", "total_exercises", "description"]
+                for p in programs[:5]:
+                    parts = []
+                    for col in key_cols:
+                        val = p.get(col, "")
+                        if col == "description" and isinstance(val, str) and len(val) > 200:
+                            val = val[:197] + "..."
+                        if val != "" and val is not None:
+                            parts.append(f"{col}: {val}")
+                    if parts:
+                        lines.append("- " + " | ".join(parts))
+                context_parts.append("\n".join(lines))
+
+        return "\n\n".join(filter(None, context_parts))

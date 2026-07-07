@@ -17,7 +17,7 @@ from sqlalchemy.orm import Session
 from database.db_engine import get_db
 from database.db_models import User, ChatSession, ChatMessage
 from models import ChatRequest, ChatResponse, ChatRequestDB
-from llm_service import chat_stream, chat_simple, detect_intent
+from llm_service import chat_stream, chat_simple, detect_intent, list_agents
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -271,10 +271,40 @@ async def chat_endpoint(request: ChatRequest):
 
 
 # ==============================================================
-# GET /intents — daftar intent
+# GET /intents — daftar agent yang aktif
 # ==============================================================
 @router.get("/intents")
 async def get_intents():
-    """Daftar intent yang didukung (untuk debugging)."""
-    from llm_service import INTENT_PATTERNS
-    return {"intents": list(INTENT_PATTERNS.keys())}
+    """
+    Kembalikan daftar agent yang aktif dalam sistem multi-agent.
+    Berguna untuk debugging dan dokumentasi API.
+    """
+    agents = list_agents()
+    return {
+        "architecture": "multi-agent",
+        "agents": [
+            {"name": name, "description": desc}
+            for name, desc in agents.items()
+        ]
+    }
+
+
+# ==============================================================
+# GET /agents — info detail sistem multi-agent
+# ==============================================================
+@router.get("/agents")
+async def get_agents():
+    """
+    Info lengkap tentang semua agent yang tersedia di FitMind AI.
+    """
+    agents = list_agents()
+    return {
+        "system": "FitMind AI Multi-Agent System",
+        "supervisor": "SupervisorAgent",
+        "routing": "LLM-based classification with Regex fallback",
+        "agents": [
+            {"name": name, "description": desc, "domain": name}
+            for name, desc in agents.items()
+        ],
+        "total_agents": len(agents)
+    }
