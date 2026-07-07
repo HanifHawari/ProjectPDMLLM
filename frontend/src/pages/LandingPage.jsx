@@ -57,12 +57,18 @@ export default function LandingPage() {
           style={{
             position: 'absolute', inset: 0,
             width: '100%', height: '100%', objectFit: 'cover',
-            filter: 'brightness(0.45)',
             zIndex: 0,
           }}
         >
           <source src="/gym_bg.mp4" type="video/mp4" />
         </video>
+
+        {/* Darkening overlay (mengganti filter: brightness untuk performa lebih baik) */}
+        <div style={{
+          position: 'absolute', inset: 0,
+          backgroundColor: 'rgba(0,0,0,0.55)',
+          zIndex: 1,
+        }} />
 
         {/* Color overlay */}
         <div style={{
