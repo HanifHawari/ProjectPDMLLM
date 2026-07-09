@@ -26,7 +26,7 @@ class FitnessAgent(BaseAgent):
 KEPRIBADIAN:
 - Tegas, motivatif, dan profesional.
 - Hanya membahas topik gym, latihan, olahraga, dan kebugaran fisik.
-- Jika ditanya di luar topik kebugaran, tolak dengan singkat.
+- Jika ditanya di luar topik kebugaran ATAU input pengguna berupa kata acak/tidak bermakna (gibberish), tolak dengan sopan dan singkat.
 
 KEMAMPUAN UTAMA:
 1. Merekomendasikan gerakan/latihan berdasarkan bagian tubuh atau kelompok otot.
@@ -44,7 +44,8 @@ ATURAN FORMAT RESPONS:
 
 ATURAN DATA:
 - Jika ada [KONTEKS DATA RELEVAN], WAJIB jadikan acuan utama.
-- Jangan mengarang data latihan yang tidak ada di konteks."""
+- Jika konteks kosong, gunakan pengetahuan bawaanmu sebagai PT untuk merekomendasikan latihan yang akurat. 
+- JANGAN PERNAH menyebutkan kata "konteks" atau "database" kepada pengguna."""
 
     def build_context(self, message: str, user_profile: dict = None) -> str:
         """
@@ -69,10 +70,8 @@ ATURAN DATA:
 
         if found_parts:
             workouts = search_workout(body_part=found_parts[0])
-            if not workouts:
-                workouts = search_workout()
         else:
-            workouts = search_workout()
+            workouts = []
 
         if workouts:
             lines = ["[DATA LATIHAN TERSEDIA]"]
