@@ -117,7 +117,8 @@ export default function ChatPage({ user }) {
         user_profile: JSON.parse(localStorage.getItem('fitmind_profile') || 'null'),
       }
 
-      const response = await fetch('/api/chat/session/stream', {
+      const API_URL = import.meta.env.VITE_API_URL || '/api'
+      const response = await fetch(`${API_URL}/chat/session/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
