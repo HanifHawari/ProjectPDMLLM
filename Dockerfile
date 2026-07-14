@@ -31,8 +31,8 @@ COPY dataset/ ./dataset/
 # Copy hasil build frontend ke dalam backend/dist (agar FastAPI bisa melakukan serve)
 COPY --from=frontend-build /app/frontend/dist ./backend/dist
 
-# Konfigurasi Port (Hugging Face Spaces mewajibkan berjalan di port 7860)
-ENV PORT=7860
+# Konfigurasi Railway Port (Railway secara otomatis memberikan environment variable $PORT)
+ENV PORT=8000
 EXPOSE $PORT
 
 # Menjalankan server
