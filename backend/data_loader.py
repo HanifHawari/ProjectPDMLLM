@@ -125,6 +125,12 @@ def load_all_datasets():
     ds.programs = _safe_read_csv(PROGRAMS_CSV)
     if not ds.programs.empty:
         ds.programs.columns = ds.programs.columns.str.strip()
+        
+        # Bersihkan string format list (misal "['Beginner']" menjadi "Beginner")
+        for col in ["level", "goal", "equipment"]:
+            if col in ds.programs.columns:
+                ds.programs[col] = ds.programs[col].astype(str).str.replace(r"\[|\]|'", "", regex=True).replace("nan", "")
+
         # Pre-build kolom numerik weeks agar filter max_weeks instan
         if "program_length" in ds.programs.columns:
             ds.programs["_weeks_num"] = pd.to_numeric(
