@@ -144,6 +144,18 @@ function HealthyFoodsTab() {
     loadFoods(type)
   }
 
+  const typeTranslation = {
+    'Fruits': 'Buah-buahan',
+    'Vegetables': 'Sayuran',
+    'Grains': 'Biji-bijian',
+    'Meat & Poultry': 'Daging & Unggas',
+    'Seafood': 'Makanan Laut',
+    'Dairy': 'Produk Susu',
+    'Beverages': 'Minuman',
+    'Snacks & Sweets': 'Camilan & Manis',
+    'Other': 'Lainnya'
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
@@ -154,7 +166,7 @@ function HealthyFoodsTab() {
         {foodTypes.slice(0, 12).map(t => (
           <button key={t} className={selectedType === t ? 'badge-green' : 'badge-gray'}
             onClick={() => filterByType(t)} style={{ cursor: 'pointer' }}>
-            {t}
+            {typeTranslation[t] || t}
           </button>
         ))}
       </div>
@@ -245,6 +257,18 @@ function FoodCard({ food }) {
   const fat = food.fat_g ? Math.round(food.fat_g * 10) / 10 : null
   const score = food.health_score ? Math.round(food.health_score) : null
 
+  const typeTranslation = {
+    'Fruits': 'Buah-buahan',
+    'Vegetables': 'Sayuran',
+    'Grains': 'Biji-bijian',
+    'Meat & Poultry': 'Daging & Unggas',
+    'Seafood': 'Makanan Laut',
+    'Dairy': 'Produk Susu',
+    'Beverages': 'Minuman',
+    'Snacks & Sweets': 'Camilan & Manis',
+    'Other': 'Lainnya'
+  }
+
   return (
     <div className="card" style={{ padding: 18 }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
@@ -252,7 +276,7 @@ function FoodCard({ food }) {
         {score && <span className="badge-green" style={{ marginLeft: 8, flexShrink: 0 }}>{score}</span>}
       </div>
       {food.food_type && (
-        <div style={{ fontSize: 11, color: '#525252', marginBottom: 8 }}>{food.food_type}</div>
+        <div style={{ fontSize: 11, color: '#525252', marginBottom: 8 }}>{typeTranslation[food.food_type] || food.food_type}</div>
       )}
       <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
         {calories !== null && <Macro label="kkal" value={calories} color="#ef4444" />}
