@@ -63,8 +63,8 @@ DATABASE_URL: str = os.getenv(
 # ==============================================================
 # CORS
 # ==============================================================
-# Set ALLOWED_ORIGINS di Railway Variables, pisahkan dengan koma.
-# Contoh: https://frontend-fitmind.up.railway.app,http://localhost:5173
+# Set ALLOWED_ORIGINS di Environment Variables, pisahkan dengan koma.
+# Contoh: https://frontend-fitmind.vercel.app,http://localhost:5173
 # Jika tidak diset, default mengizinkan semua origin (aman untuk testing).
 _origins_raw: str = os.getenv("ALLOWED_ORIGINS", "*")
 if _origins_raw == "*":
