@@ -286,7 +286,7 @@ export default function ChatPage({ user }) {
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, justifyContent: 'center', marginTop: 24 }}>
                 {[
                   'Latihan untuk otot dada',
-                  'Berapa kalori dalam 100g ayam?',
+                  'Program latihan 4 hari seminggu',
                   'Rekomendasikan program untuk pemula',
                   'Makanan tinggi protein bebas gluten',
                 ].map(suggestion => (
