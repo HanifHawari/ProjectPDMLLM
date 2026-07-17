@@ -139,6 +139,7 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=2, max_length=30,
                           pattern=r"^[a-zA-Z0-9_.-]+$",
                           description="Nama unik user (hanya huruf, angka, dot, strip, underscore. Tanpa spasi.)")
+    phone: Optional[str] = Field(None, description="Nomor WhatsApp (misal: 08123456789)")
 
 
 class UserProfileUpdate(BaseModel):
@@ -166,6 +167,7 @@ class UserResponse(BaseModel):
     """Response setelah get-or-create user."""
     id:         int
     username:   str
+    phone:      Optional[str]
     is_new:     bool  # True jika baru dibuat, False jika sudah ada
     has_profile: bool
 
@@ -207,3 +209,20 @@ class ChatRequestDB(BaseModel):
     session_id: Optional[int]   = Field(None, description="ID sesi (None = buat sesi baru)")
     history:    List[ChatMessage] = Field(default_factory=list)
     user_profile: Optional[UserProfile] = None
+
+
+# ==============================================================
+# Plan Generation Models (Structured Output)
+# ==============================================================
+
+class PlanGenerateRequest(BaseModel):
+    """Request untuk generate workout / meal plan terstruktur."""
+    plan_type: Optional[str] = Field("workout", description="'workout' atau 'meal'")
+    goal: Optional[str] = Field(None, description="weight_loss | muscle_gain | maintenance | endurance")
+    level: Optional[str] = Field(None, description="beginner | intermediate | advanced")
+    days_per_week: Optional[int] = Field(3, description="Jumlah hari latihan per minggu")
+    equipment: Optional[str] = Field(None, description="Full Gym | Dumbbells | Bodyweight")
+    diet_type: Optional[str] = Field(None, description="vegan | vegetarian | keto | paleo | normal")
+    allergies: Optional[List[str]] = Field(default_factory=list, description="Daftar alergen")
+    notes: Optional[str] = Field(None, description="Catatan tambahan dari user")
+

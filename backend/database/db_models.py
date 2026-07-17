@@ -36,6 +36,7 @@ class User(Base):
 
     id         = Column(Integer, primary_key=True, index=True)
     username   = Column(String(100), unique=True, nullable=False, index=True)
+    phone      = Column(String(20), unique=False, nullable=True) # WhatsApp number
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

@@ -34,8 +34,8 @@ const steps = [
 
 const creators = [
   { name: 'M Hanif Hawari', role: 'Backend Developer', image: '/foto1.png' },
-  { name: 'M Dian Fauzi', role: 'Frontend Developer', image: '/foto2.png' },
-  { name: 'Adhitya Surya Handika', role: 'AI Engineer', image: '/foto3.png' },
+  { name: 'M Dian Fauzi', role: 'AI Engineer', image: '/foto2.png' },
+  { name: 'Adhitya Surya Handika', role: 'Frontend Developer', image: '/foto3.png' },
 ]
 
 export default function LandingPage() {

@@ -192,3 +192,84 @@ class BaseAgent:
         async for chunk in self.stream(message, chat_history, context):
             full += chunk
         return full
+
+    async def generate_structured(
+        self,
+        message: str,
+        chat_history: list[dict],
+        context: str = "",
+        response_schema: dict = None,
+        system_prompt_override: str = None,
+    ) -> dict:
+        """
+        Generate structured JSON output menggunakan LLM JSON Mode.
+        Non-streaming — mengembalikan dict Python yang sudah di-parse.
+
+        Args:
+            message: Pesan/instruksi user
+            chat_history: Riwayat percakapan
+            context: Konteks RAG dari dataset
+            response_schema: JSON Schema untuk Gemini (opsional)
+            system_prompt_override: Override system_prompt default (opsional)
+
+        Returns:
+            dict: Respons LLM yang sudah di-parse dari JSON
+        """
+        prompt = system_prompt_override or self.system_prompt
+
+        if GROQ_API_KEY:
+            messages = [{"role": "system", "content": prompt}]
+            for msg in chat_history[-10:]:
+                role = "user" if msg.get("role") == "user" else "assistant"
+                messages.append({"role": role, "content": msg.get("content", "")})
+
+            final_message = message
+            if context:
+                final_message = (
+                    f"{message}\n\n---\n"
+                    f"[KONTEKS DATA RELEVAN]\n{context}\n---"
+                )
+            messages.append({"role": "user", "content": final_message})
+
+            async with httpx.AsyncClient() as http_client:
+                resp = await http_client.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    json={
+                        "model": GROQ_MODEL,
+                        "messages": messages,
+                        "temperature": 0.7,
+                        "max_tokens": 4096,
+                        "response_format": {"type": "json_object"},
+                    },
+                    headers={
+                        "Authorization": f"Bearer {GROQ_API_KEY}",
+                        "Content-Type": "application/json",
+                    },
+                    timeout=60.0,
+                )
+                if resp.status_code != 200:
+                    raise Exception(f"Groq API error: {resp.status_code} {resp.text}")
+                data = resp.json()
+                raw = data["choices"][0]["message"]["content"]
+                return json.loads(raw)
+
+        elif _gemini_client:
+            contents = self._build_gemini_contents(message, chat_history, context)
+            config_kwargs = {
+                "system_instruction": prompt,
+                "temperature": 0.7,
+                "max_output_tokens": 4096,
+                "response_mime_type": "application/json",
+            }
+            if response_schema:
+                config_kwargs["response_schema"] = response_schema
+
+            response = await _gemini_client.aio.models.generate_content(
+                model=GEMINI_MODEL,
+                contents=contents,
+                config=types.GenerateContentConfig(**config_kwargs),
+            )
+            return json.loads(response.text)
+
+        else:
+            raise Exception("Tidak ada API key yang valid (Groq/Gemini).")

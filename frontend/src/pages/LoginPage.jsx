@@ -18,6 +18,7 @@ export default function LoginPage() {
       const user = res.data
       localStorage.setItem('fitmind_user', JSON.stringify({
         username: user.username,
+        phone: user.phone,
         id: user.id,
         is_new: user.is_new,
         has_profile: user.has_profile,

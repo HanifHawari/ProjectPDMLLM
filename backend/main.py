@@ -15,7 +15,7 @@ from pydantic import ValidationError
 from config import APP_HOST, APP_PORT, ALLOWED_ORIGINS
 from data_loader import load_all_datasets
 from database.db_engine import init_db
-from routers import chat, workout, nutrition, programs, dashboard, users
+from routers import chat, workout, nutrition, programs, dashboard, users, plans, calendar, whatsapp
 
 # Direktori hasil build frontend (frontend/dist → di-copy ke backend/dist saat build)
 FRONTEND_DIST = Path(__file__).parent / "dist"
@@ -75,6 +75,9 @@ app.include_router(workout.router,   prefix="/api/workout",   tags=["Workout"])
 app.include_router(nutrition.router, prefix="/api/nutrition", tags=["Nutrition"])
 app.include_router(programs.router,  prefix="/api/programs",  tags=["Programs"])
 app.include_router(dashboard.router, prefix="/api/dashboard", tags=["Dashboard"])
+app.include_router(plans.router,     prefix="/api/plans",     tags=["Plans"])
+app.include_router(calendar.router,  prefix="/api/calendar",  tags=["Calendar"])
+app.include_router(whatsapp.router,  prefix="/api/whatsapp",  tags=["WhatsApp"])
 
 
 # ==============================================================

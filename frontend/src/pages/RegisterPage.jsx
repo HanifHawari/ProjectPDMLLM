@@ -4,6 +4,7 @@ import api from '../api'
 
 export default function RegisterPage() {
   const [username, setUsername] = useState('')
+  const [phone, setPhone] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
@@ -11,12 +12,12 @@ export default function RegisterPage() {
 
   async function handleRegister(e) {
     e.preventDefault()
-    if (!username.trim()) return
+    if (!username.trim() || !phone.trim()) return
     setLoading(true)
     setError('')
     setSuccess(false)
     try {
-      await api.post('/users/register', { username: username.trim() })
+      await api.post('/users/register', { username: username.trim(), phone: phone.trim() })
       setSuccess(true)
       // Do not auto-login or redirect, so the user can see the success message
 
@@ -86,6 +87,23 @@ export default function RegisterPage() {
                 setError('')
               }}
               autoFocus
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, color: '#a3a3a3', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>
+              Nomor WhatsApp
+            </label>
+            <input
+              className="input-field"
+              type="text"
+              placeholder="Contoh: 08123456789"
+              value={phone}
+              onChange={e => {
+                setPhone(e.target.value)
+                setSuccess(false)
+                setError('')
+              }}
             />
           </div>
 

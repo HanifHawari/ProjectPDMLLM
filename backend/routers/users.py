@@ -62,6 +62,7 @@ async def login(body: UserCreate, db: Session = Depends(get_db)):
     return UserResponse(
         id=existing.id,
         username=existing.username,
+        phone=existing.phone,
         is_new=False,
         has_profile=existing.profile is not None
     )
@@ -78,8 +79,11 @@ async def register(body: UserCreate, db: Session = Depends(get_db)):
     if existing:
         raise HTTPException(status_code=400, detail="Username sudah terdaftar. Silakan login.")
 
+    if not body.phone:
+        raise HTTPException(status_code=400, detail="Nomor WhatsApp wajib diisi untuk keamanan automation.")
+
     # Buat user baru
-    new_user = User(username=username)
+    new_user = User(username=username, phone=body.phone.strip())
     db.add(new_user)
     db.commit()
     db.refresh(new_user)
@@ -88,6 +92,7 @@ async def register(body: UserCreate, db: Session = Depends(get_db)):
     return UserResponse(
         id=new_user.id,
         username=new_user.username,
+        phone=new_user.phone,
         is_new=True,
         has_profile=False
     )
