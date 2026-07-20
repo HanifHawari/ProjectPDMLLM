@@ -21,6 +21,7 @@ from models import (
     APIResponse, UserCreate, UserProfileUpdate,
     UserResponse, SessionResponse, MessageResponse
 )
+import bcrypt
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -57,6 +58,9 @@ async def login(body: UserCreate, db: Session = Depends(get_db)):
     
     if not existing:
         raise HTTPException(status_code=404, detail="Username tidak ditemukan. Silakan daftar terlebih dahulu.")
+        
+    if not existing.password_hash or not bcrypt.checkpw(body.password.encode('utf-8'), existing.password_hash.encode('utf-8')):
+        raise HTTPException(status_code=401, detail="Username atau password salah.")
 
     logger.info(f"User login: '{username}' (id={existing.id})")
     return UserResponse(
@@ -82,8 +86,9 @@ async def register(body: UserCreate, db: Session = Depends(get_db)):
     if not body.phone:
         raise HTTPException(status_code=400, detail="Nomor WhatsApp wajib diisi untuk keamanan automation.")
 
+    hashed_password = bcrypt.hashpw(body.password.encode('utf-8'), bcrypt.gensalt()).decode('utf-8')
     # Buat user baru
-    new_user = User(username=username, phone=body.phone.strip())
+    new_user = User(username=username, phone=body.phone.strip(), password_hash=hashed_password)
     db.add(new_user)
     db.commit()
     db.refresh(new_user)

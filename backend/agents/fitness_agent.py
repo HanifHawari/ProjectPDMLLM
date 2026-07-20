@@ -4,7 +4,8 @@ Spesialis: Latihan gym, program workout, gerakan per body part.
 Persona: Personal Trainer profesional.
 """
 from agents.base_agent import BaseAgent
-from data_loader import search_workout, search_programs
+from data_loader import search_programs
+from vector_store import get_workout_retriever
 
 
 class FitnessAgent(BaseAgent):
@@ -60,25 +61,15 @@ ATURAN DATA:
             )
             context_parts.append(profile_str)
 
-        # Cari workout berdasarkan kata kunci di pesan
-        keywords = [
-            "dada", "chest", "punggung", "back", "kaki", "legs", "bahu", "shoulders",
-            "perut", "abs", "bicep", "tricep", "lengan", "arms", "paha", "hamstring",
-            "quad", "glute", "bokong", "betis", "calf", "core", "forearm"
-        ]
-        found_parts = [kw for kw in keywords if kw.lower() in message.lower()]
-
-        if found_parts:
-            workouts = search_workout(body_part=found_parts[0])
-        else:
-            workouts = []
-
-        if workouts:
-            lines = ["[DATA LATIHAN TERSEDIA]"]
-            for w in workouts[:10]:
-                row_str = " | ".join(f"{k}: {v}" for k, v in w.items() if v)
-                lines.append(f"- {row_str}")
-            context_parts.append("\n".join(lines))
+        # Cari workout menggunakan Vector Database (ChromaDB)
+        retriever = get_workout_retriever(k=5)
+        if retriever:
+            docs = retriever.invoke(message)
+            if docs:
+                lines = ["[DATA LATIHAN TERSEDIA (Dari Vector DB)]"]
+                for doc in docs:
+                    lines.append(f"- {doc.page_content}")
+                context_parts.append("\n".join(lines))
 
         # Tambahkan data program jika relevan
         msg_lower = message.lower()

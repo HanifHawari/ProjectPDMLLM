@@ -14,11 +14,10 @@ import json
 import logging
 from typing import AsyncGenerator
 
-import httpx
-from google import genai
-from google.genai import types
+from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_google_genai import ChatGoogleGenerativeAI
 
-from config import GEMINI_API_KEY, GEMINI_MODEL, GROQ_API_KEY, GROQ_MODEL
+from config import GEMINI_API_KEY, GEMINI_MODEL
 from agents.fitness_agent import FitnessAgent
 from agents.nutrition_agent import NutritionAgent
 from agents.health_agent import HealthAgent
@@ -43,9 +42,13 @@ AGENT_REGISTRY: dict[str, object] = {
 # LLM Client untuk Supervisor (sama seperti agent lain)
 # ==============================================================
 if GEMINI_API_KEY and GEMINI_API_KEY != "ISI_API_KEY_KAMU_DISINI":
-    _gemini_client = genai.Client(api_key=GEMINI_API_KEY)
+    llm_classifier = ChatGoogleGenerativeAI(
+        model=GEMINI_MODEL,
+        google_api_key=GEMINI_API_KEY,
+        temperature=0.0
+    )
 else:
-    _gemini_client = None
+    llm_classifier = None
 
 # ==============================================================
 # Prompt Supervisor — untuk klasifikasi intent
@@ -70,55 +73,25 @@ async def _classify_intent(message: str) -> str:
     Returns: salah satu dari "fitness", "nutrition", "health"
     """
     try:
-        if GROQ_API_KEY:
-            async with httpx.AsyncClient() as http_client:
-                resp = await http_client.post(
-                    "https://api.groq.com/openai/v1/chat/completions",
-                    json={
-                        "model": GROQ_MODEL,
-                        "messages": [
-                            {"role": "system", "content": _SUPERVISOR_PROMPT},
-                            {"role": "user", "content": message}
-                        ],
-                        "temperature": 0.0,  # Deterministic
-                        "max_tokens": 30,
-                        "stream": False
-                    },
-                    headers={
-                        "Authorization": f"Bearer {GROQ_API_KEY}",
-                        "Content-Type": "application/json"
-                    },
-                    timeout=10.0
-                )
-                if resp.status_code == 200:
-                    data = resp.json()
-                    raw = data["choices"][0]["message"]["content"].strip()
-                    parsed = json.loads(raw)
-                    agent_name = parsed.get("agent", "fitness")
-                    if agent_name in AGENT_REGISTRY:
-                        return agent_name
-
-        elif _gemini_client:
-            response = await _gemini_client.aio.models.generate_content(
-                model=GEMINI_MODEL,
-                contents=[types.Content(
-                    role="user",
-                    parts=[types.Part(text=message)]
-                )],
-                config=types.GenerateContentConfig(
-                    system_instruction=_SUPERVISOR_PROMPT,
-                    temperature=0.0,
-                    max_output_tokens=30,
-                ),
-            )
-            raw = response.text.strip()
+        if llm_classifier:
+            messages = [
+                SystemMessage(content=_SUPERVISOR_PROMPT),
+                HumanMessage(content=message)
+            ]
+            response = await llm_classifier.ainvoke(messages)
+            raw = response.content.strip()
+            
+            if "```json" in raw:
+                raw = raw.split("```json")[1].split("```")[0].strip()
+            elif "```" in raw:
+                raw = raw.split("```")[1].strip()
+                
             parsed = json.loads(raw)
             agent_name = parsed.get("agent", "fitness")
             if agent_name in AGENT_REGISTRY:
                 return agent_name
-
     except Exception as e:
-        logger.warning(f"[Supervisor] Klasifikasi LLM gagal ({e}), pakai fallback Regex.")
+        logger.warning(f"[Supervisor] Klasifikasi LangChain LLM gagal ({e}), pakai fallback Regex.")
 
     # --- Fallback: Regex sederhana jika LLM gagal ---
     return _classify_by_regex(message)

@@ -1,15 +1,22 @@
-# FitMind AI 🏋️‍♂️🧠
+# FitMind Enterprise Management System 🏋️‍♂️🏢
 
-**FitMind AI** adalah platform kebugaran dan nutrisi berbasis Kecerdasan Buatan (AI) yang dirancang untuk membantu Anda mencapai tubuh impian. Dengan memanfaatkan model LLM mutakhir, FitMind AI menyajikan program latihan yang dipersonalisasi dan rekomendasi nutrisi cerdas yang disesuaikan dengan kondisi, preferensi, dan target kebugaran Anda.
+**FitMind Enterprise Management System** adalah sebuah studi kasus sistem manajemen berskala besar (Enterprise) untuk jaringan *Fitness Center*. Sistem ini menyelesaikan masalah operasional di berbagai divisi berbeda menggunakan pendekatan **Multi-Agentic LLM**. 
+
+Terdapat beberapa divisi (agen) yang saling berinteraksi:
+- **Divisi Operasional (Fitness Agent)**: Mengelola dan memberikan rekomendasi seputar fasilitas gym, teknik latihan, dan ketersediaan alat.
+- **Divisi F&B (Nutrition Agent)**: Mengatur *meal plan* dan nutrisi klien sesuai dengan alergi dan kondisi kesehatan.
+- **Divisi Medis/Klinik (Health Agent)**: Menangani kalkulasi kalori, BMI, zona detak jantung, dan aspek klinis kebugaran.
+- **Divisi Perencanaan (Planner Agent)**: Menyusun jadwal komprehensif harian/mingguan.
+Semua divisi ini dikoordinasikan secara cerdas oleh **Supervisor Agent** (Manajer Utama).
 
 ---
 
 ## ✨ Fitur Unggulan
 
-- 🤖 **AI Personal Trainer**: Dapatkan rencana latihan yang disusun otomatis oleh AI berdasarkan tujuan (turun berat badan / bentuk otot), tingkat pengalaman, dan ketersediaan alat.
-- 🥗 **Nutrisi Cerdas**: Dapatkan rekomendasi makanan, hitung kalori, dan buat *meal plan* sehat yang disesuaikan dengan kebutuhan harian serta alergi makanan Anda.
-- 📊 **Tracking Kebugaran**: Pantau indikator kesehatan seperti BMI, kebutuhan kalori harian, dan zona detak jantung secara *real-time* langsung dari *dashboard*.
-- 💬 **Asisten AI 24/7**: Chatbot pintar yang siap menjawab pertanyaan seputar olahraga, diet, dan pola hidup sehat kapan saja.
+- 🤖 **Enterprise Multi-Agent Architecture**: Dibangun menggunakan *framework* LangChain dengan beberapa agen independen yang mewakili divisi perusahaan.
+- 🧠 **Vector Database & RAG (Retrieval-Augmented Generation)**: Pencarian semantik menggunakan **ChromaDB** dan *Embeddings* untuk menarik data secara akurat dari basis data perusahaan.
+- 🥗 **Nutrisi & Operasional Cerdas**: Kalkulasi asupan kalori dan *meal plan* sehat yang terintegrasi dengan ketersediaan peralatan gym (*full gym, dumbbell, bodyweight*).
+- 💬 **Asisten AI 24/7**: Chatbot manajer yang siap mendelegasikan pertanyaan ke divisi yang tepat.
 
 ## 🛠️ Teknologi yang Digunakan
 

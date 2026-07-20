@@ -5,27 +5,47 @@ import api from '../api'
 export default function RegisterPage() {
   const [username, setUsername] = useState('')
   const [phone, setPhone] = useState('')
+  const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
   const [success, setSuccess] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
   const navigate = useNavigate()
+
+  // Fungsi cek kekuatan password
+  const getPasswordStrength = (pwd) => {
+    if (!pwd) return { score: 0, color: 'transparent', label: '' }
+    if (pwd.length < 6) return { score: 1, color: '#ef4444', label: 'Lemah' } // Merah
+    const hasNumber = /\d/.test(pwd)
+    const hasSpecial = /[^A-Za-z0-9]/.test(pwd)
+    const hasUpper = /[A-Z]/.test(pwd)
+    
+    if (pwd.length >= 8 && hasNumber && (hasSpecial || hasUpper)) {
+      return { score: 3, color: '#22c55e', label: 'Kuat' } // Hijau
+    }
+    return { score: 2, color: '#eab308', label: 'Sedang' } // Kuning
+  }
+  
+  const strength = getPasswordStrength(password)
 
   async function handleRegister(e) {
     e.preventDefault()
-    if (!username.trim() || !phone.trim()) return
+    if (!username.trim() || !phone.trim() || !password.trim()) return
     setLoading(true)
     setError('')
     setSuccess(false)
     try {
-      await api.post('/users/register', { username: username.trim(), phone: phone.trim() })
+      await api.post('/users/register', { username: username.trim(), phone: phone.trim(), password: password.trim() })
       setSuccess(true)
       // Do not auto-login or redirect, so the user can see the success message
 
     } catch (err) {
       if (err.response?.status === 400) {
-        setError('Username sudah terdaftar. Silakan gunakan nama lain atau masuk.')
+        setError(err.response.data.detail)
+      } else if (err.response?.status === 422) {
+        setError('Format data tidak valid. Pastikan username tidak menggunakan spasi.')
       } else {
-        setError('Gagal mendaftar. Pastikan backend berjalan.')
+        setError('Gagal mendaftar. Pastikan backend sudah berjalan.')
       }
     } finally {
       setLoading(false)
@@ -97,7 +117,7 @@ export default function RegisterPage() {
             <input
               className="input-field"
               type="text"
-              placeholder="Contoh: 08123456789"
+              placeholder="08xxxxxxxxxx"
               value={phone}
               onChange={e => {
                 setPhone(e.target.value)
@@ -105,6 +125,72 @@ export default function RegisterPage() {
                 setError('')
               }}
             />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 12, color: '#a3a3a3', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: 8 }}>
+              Password
+            </label>
+            <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+              <input
+                className="input-field"
+                type={showPassword ? "text" : "password"}
+                placeholder="Buat password..."
+                value={password}
+                onChange={e => {
+                  setPassword(e.target.value)
+                  setSuccess(false)
+                  setError('')
+                }}
+                style={{ paddingRight: '40px', width: '100%' }}
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{
+                  position: 'absolute',
+                  right: '12px',
+                  background: 'none',
+                  border: 'none',
+                  color: '#a3a3a3',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: 0
+                }}
+                title={showPassword ? "Sembunyikan sandi" : "Tampilkan sandi"}
+              >
+                {showPassword ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                )}
+              </button>
+            </div>
+            
+            {/* Password Strength Indicator */}
+            {password.length > 0 && (
+              <div style={{ marginTop: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: '#a3a3a3', marginBottom: 4 }}>
+                  <span>Kekuatan Sandi</span>
+                  <span style={{ color: strength.color, fontWeight: 600 }}>{strength.label}</span>
+                </div>
+                <div style={{ display: 'flex', gap: 4, height: 4 }}>
+                  {[1, 2, 3].map((level) => (
+                    <div
+                      key={level}
+                      style={{
+                        flex: 1,
+                        background: strength.score >= level ? strength.color : '#2a2a2a',
+                        borderRadius: 2,
+                        transition: 'background 0.3s ease'
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
 
           {error && (

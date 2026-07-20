@@ -14,6 +14,7 @@ from pydantic import ValidationError
 
 from config import APP_HOST, APP_PORT, ALLOWED_ORIGINS
 from data_loader import load_all_datasets
+from vector_store import init_vector_stores
 from database.db_engine import init_db
 from routers import chat, workout, nutrition, programs, dashboard, users, plans, calendar, whatsapp
 
@@ -40,6 +41,7 @@ async def lifespan(app: FastAPI):
     logger.info("FitMind AI Backend starting...")
     init_db()
     load_all_datasets()
+    init_vector_stores()
     logger.info("Server siap menerima request!")
     yield
     logger.info("👋 FitMind AI Backend shutting down...")
@@ -61,9 +63,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=ALLOWED_ORIGINS,
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_private_network=True,
 )
 
 # ==============================================================

@@ -139,6 +139,7 @@ class UserCreate(BaseModel):
     username: str = Field(..., min_length=2, max_length=30,
                           pattern=r"^[a-zA-Z0-9_.-]+$",
                           description="Nama unik user (hanya huruf, angka, dot, strip, underscore. Tanpa spasi.)")
+    password: str = Field(..., min_length=1, description="Password user")
     phone: Optional[str] = Field(None, description="Nomor WhatsApp (misal: 08123456789)")
 
 
