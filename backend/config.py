@@ -29,6 +29,11 @@ GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
 FONNTE_TOKEN: str = os.getenv("FONNTE_TOKEN", "")
 
 # ==============================================================
+# RapidAPI (ExerciseDB)
+# ==============================================================
+RAPIDAPI_KEY: str = os.getenv("RAPIDAPI_KEY", "")
+
+# ==============================================================
 # App
 # ==============================================================
 APP_ENV: str = os.getenv("APP_ENV", "development")

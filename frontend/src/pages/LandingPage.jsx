@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import '../components/buttons.css'
 
@@ -20,10 +21,10 @@ const features = [
 ]
 
 const stats = [
-  { value: '35K+', label: 'Data Nutrisi' },
-  { value: '2,500+', label: 'Program Latihan' },
-  { value: '24/7', label: 'AI Siap Membantu' },
-  { value: '100%', label: 'Dipersonalisasi' },
+  { value: 35, suffix: 'K+', label: 'Data Nutrisi' },
+  { value: 2500, suffix: '+', label: 'Program Latihan' },
+  { value: 24, suffix: '/7', label: 'AI Siap Membantu' },
+  { value: 100, suffix: '%', label: 'Dipersonalisasi' },
 ]
 
 const steps = [
@@ -32,10 +33,12 @@ const steps = [
   { step: '03', title: 'Terima Rencana AI', desc: 'AI akan langsung menyusun program latihan harian dan menu nutrisi khusus untukmu.' },
 ]
 
-const creators = [
-  { name: 'M Hanif Hawari', role: 'Backend Developer', image: '/foto1.png' },
-  { name: 'M Dian Fauzi', role: 'AI Engineer', image: '/foto2.png' },
-  { name: 'Adhitya Surya Handika', role: 'Frontend Developer', image: '/foto3.png' },
+const userReviews = [
+  { name: 'Andi S.', rating: 5, comment: 'Sangat terbantu dengan AI Personal Trainer. Latihan jadi lebih terstruktur!' },
+  { name: 'Budi W.', rating: 5, comment: 'Nutrisi cerdas dari FitMindAI bikin diet nggak tersiksa lagi. Mantap!' },
+  { name: 'Citra K.', rating: 4, comment: 'Tracking kebugaran yang real-time sangat memotivasi saya setiap hari.' },
+  { name: 'Diana P.', rating: 5, comment: 'Platform AI terbaik untuk fitness yang pernah saya coba. Sangat responsif.' },
+  { name: 'Eko R.', rating: 5, comment: 'Rekomendasi latihannya sangat pas dengan alat gym yang saya punya.' },
 ]
 
 export default function LandingPage() {
@@ -175,14 +178,7 @@ export default function LandingPage() {
         gap: 24,
       }}>
         {stats.map((s, i) => (
-          <div key={i} style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.03em', color: '#ffffff' }}>
-              {s.value}
-            </div>
-            <div style={{ fontSize: 13, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 4 }}>
-              {s.label}
-            </div>
-          </div>
+          <AnimatedStat key={i} {...s} />
         ))}
       </section>
 
@@ -234,35 +230,8 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ── CREATORS ──────────────────────────────────── */}
-      <section className="section-px py-24" style={{ background: '#111111', borderTop: '1px solid #1e1e1e' }}>
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
-            Tim Pengembang
-          </div>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            Di Balik <span style={{ color: '#22c55e' }}>FitMind AI</span>
-          </h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 40, maxWidth: 900, margin: '0 auto' }}>
-          {creators.map((c, i) => (
-            <div key={i} style={{ textAlign: 'center' }}>
-              <div style={{
-                width: 200, height: 200, margin: '0 auto 24px',
-                borderRadius: '16px', background: '#1a1a1a', border: '2px solid #2a2a2a',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                boxShadow: '0 12px 30px rgba(0,0,0,0.5)',
-                overflow: 'hidden',
-                position: 'relative'
-              }}>
-                <img src={c.image} style={{ width: '100%', height: '100%', objectFit: 'cover' }} alt={c.name} />
-              </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 8, color: '#f5f5f5' }}>{c.name}</h3>
-              <div style={{ fontSize: 14, color: '#22c55e', textTransform: 'uppercase', letterSpacing: '0.05em' }}>{c.role}</div>
-            </div>
-          ))}
-        </div>
-      </section>
+      {/* ── USER REVIEWS ──────────────────────────────────── */}
+      <ReviewSection />
 
       {/* ── CTA SECTION ───────────────────────────────────── */}
       <section className="section-px py-24" style={{
@@ -382,9 +351,7 @@ function FeatureCard({ title, desc, color }) {
   return (
     <div
       style={{
-        background: `linear-gradient(rgba(17,17,17,0.92), rgba(17,17,17,0.92)), url(/gym_hero_bg.png)`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center',
+        background: '#111111',
         border: '1px solid #1e1e1e',
         borderRadius: 16, padding: 32,
         transition: 'all 0.3s',
@@ -404,6 +371,130 @@ function FeatureCard({ title, desc, color }) {
       <div style={{ width: 3, height: 28, background: color, borderRadius: 2, marginBottom: 20 }} />
       <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, letterSpacing: '-0.01em' }}>{title}</div>
       <div style={{ fontSize: 14, color: '#525252', lineHeight: 1.65 }}>{desc}</div>
+    </div>
+  )
+}
+
+function ReviewSection() {
+  const [activeIndex, setActiveIndex] = useState(0)
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveIndex((current) => (current + 1) % userReviews.length)
+    }, 2000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <section className="section-px py-24" style={{ background: '#111111', borderTop: '1px solid #1e1e1e', overflow: 'hidden' }}>
+      <div style={{ textAlign: 'center', marginBottom: 64 }}>
+        <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
+          Ulasan Pengguna
+        </div>
+        <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
+          Apa Kata <span style={{ color: '#22c55e' }}>Mereka</span>
+        </h2>
+      </div>
+      
+      <div style={{ maxWidth: 800, margin: '0 auto', position: 'relative', height: 260 }}>
+        {userReviews.map((review, i) => (
+          <div key={i} style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            opacity: activeIndex === i ? 1 : 0,
+            transform: activeIndex === i ? 'translateX(0)' : (i < activeIndex ? 'translateX(-50px)' : 'translateX(50px)'),
+            transition: 'all 0.5s ease-in-out',
+            textAlign: 'center',
+            pointerEvents: activeIndex === i ? 'auto' : 'none',
+            background: '#1a1a1a',
+            border: '1px solid #2a2a2a',
+            borderRadius: 16,
+            padding: '40px 24px',
+            boxSizing: 'border-box'
+          }}>
+            <div style={{ fontSize: 24, color: '#fbbf24', marginBottom: 16 }}>
+              {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+            </div>
+            <p style={{ fontSize: 20, fontStyle: 'italic', color: '#f5f5f5', marginBottom: 24, lineHeight: 1.5 }}>
+              "{review.comment}"
+            </p>
+            <div style={{ fontSize: 16, fontWeight: 700, color: '#22c55e' }}>
+              - {review.name}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function AnimatedStat({ value, suffix, label }) {
+  const [count, setCount] = useState(0)
+  const [isVisible, setIsVisible] = useState(false)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true)
+          observer.disconnect()
+        }
+      },
+      { threshold: 0.1 }
+    )
+    
+    // Create a safe ID from the label
+    const safeId = `stat-${label.replace(/\s+/g, '-').toLowerCase()}`
+    const element = document.getElementById(safeId)
+    if (element) observer.observe(element)
+    
+    return () => observer.disconnect()
+  }, [label])
+
+  useEffect(() => {
+    if (!isVisible) return
+
+    let start = 0
+    const end = typeof value === 'number' ? value : parseInt(value.toString().replace(/,/g, ''))
+    if (isNaN(end)) {
+      setCount(value)
+      return
+    }
+
+    const duration = 2000
+    const incrementTime = 30
+    const totalSteps = duration / incrementTime
+    const step = end / totalSteps
+
+    const timer = setInterval(() => {
+      start += step
+      if (start >= end) {
+        setCount(end)
+        clearInterval(timer)
+      } else {
+        setCount(Math.floor(start))
+      }
+    }, incrementTime)
+
+    return () => clearInterval(timer)
+  }, [isVisible, value])
+
+  const displayValue = typeof count === 'number' && count >= 1000 
+    ? count.toLocaleString('en-US') 
+    : count
+
+  const safeId = `stat-${label.replace(/\s+/g, '-').toLowerCase()}`
+
+  return (
+    <div id={safeId} style={{ textAlign: 'center' }}>
+      <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.03em', color: '#ffffff' }}>
+        {displayValue}{suffix}
+      </div>
+      <div style={{ fontSize: 13, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 4 }}>
+        {label}
+      </div>
     </div>
   )
 }

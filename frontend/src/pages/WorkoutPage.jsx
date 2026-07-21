@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import Sidebar from '../components/Sidebar'
 import api from '../api'
 
@@ -189,14 +189,36 @@ export default function WorkoutPage({ user }) {
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
   const [tab, setTab] = useState('exercises')
+  const [selectedExercise, setSelectedExercise] = useState(null)
 
   async function search() {
     setLoading(true)
     setSearched(true)
     try {
-      const res = await api.get('/workout/search', {
-        params: { q: query || undefined, body_part: bodyPart || undefined, limit: 24 },
-      })
+      let res
+      if (query.trim()) {
+        // Cari berdasarkan nama (ExerciseDB)
+        res = await api.get('/workout/gif/search', { params: { q: query.trim() } })
+      } else if (bodyPart) {
+        // Cari berdasarkan body part (ExerciseDB)
+        res = await api.get('/workout/gif/body-part', { params: { body_part: bodyPart.toLowerCase() } })
+      } else {
+        // Fallback: dataset lokal jika tidak ada filter
+        res = await api.get('/workout/search', { params: { limit: 24 } })
+      }
+      setResults(res.data.data || [])
+    } catch (_) { setResults([]) }
+    setLoading(false)
+  }
+
+  async function handleBodyPartFilter(bp) {
+    setBodyPart(bp)
+    setQuery('')
+    if (!bp) { setResults([]); setSearched(false); return }
+    setLoading(true)
+    setSearched(true)
+    try {
+      const res = await api.get('/workout/gif/body-part', { params: { body_part: bp.toLowerCase() } })
       setResults(res.data.data || [])
     } catch (_) { setResults([]) }
     setLoading(false)
@@ -233,7 +255,7 @@ export default function WorkoutPage({ user }) {
           <div>
             {/* Search */}
             <div style={{ display: 'flex', gap: 10, marginBottom: 14 }}>
-              <input className="input-field" placeholder="Cari gerakan (contoh: push up, squat)..." value={query}
+              <input className="input-field" placeholder="Cari gerakan (contoh: push up, squat, bicep curl)..." value={query}
                 onChange={e => setQuery(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && search()} />
               <button className="btn-primary" onClick={search} disabled={loading} style={{ flexShrink: 0 }}>
@@ -243,13 +265,14 @@ export default function WorkoutPage({ user }) {
 
             {/* Body part filter */}
             <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
-              <button className={!bodyPart ? 'badge-green' : 'badge-gray'} onClick={() => { setBodyPart(''); }}
+              <button className={!bodyPart ? 'badge-green' : 'badge-gray'}
+                onClick={() => handleBodyPartFilter('')}
                 style={{ cursor: 'pointer' }}>
                 Semua
               </button>
               {bodyParts.map(bp => (
                 <button key={bp} className={bodyPart === bp ? 'badge-red' : 'badge-gray'}
-                  onClick={() => { setBodyPart(bp); }}
+                  onClick={() => handleBodyPartFilter(bp)}
                   style={{ cursor: 'pointer' }}>
                   {bp}
                 </button>
@@ -262,7 +285,7 @@ export default function WorkoutPage({ user }) {
             )}
             {!loading && results.length > 0 && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
-                {results.map((ex, i) => <ExerciseCard key={i} exercise={ex} />)}
+                {results.map((ex, i) => <ExerciseCard key={i} exercise={ex} onSelect={setSelectedExercise} />)}
               </div>
             )}
             {!searched && (
@@ -274,6 +297,11 @@ export default function WorkoutPage({ user }) {
         )}
 
         {tab === 'programs' && <ProgramsTab />}
+
+        {/* Modal Detail Gerakan */}
+        {selectedExercise && (
+          <ExerciseModal exercise={selectedExercise} onClose={() => setSelectedExercise(null)} />
+        )}
       </main>
     </div>
   )
@@ -347,64 +375,200 @@ function ProgramsTab() {
   )
 }
 
-/* ─── Exercise Card dengan Gambar Placeholder ──────────── */
-function ExerciseCard({ exercise }) {
-  const name = exercise.exercise_name || exercise.name || exercise.Workout || 'Gerakan'
-  const bodyPart = exercise.body_part || exercise['Body Part'] || ''
-
-  // Membuat format nama file yang aman (huruf kecil, ganti spasi/karakter khusus dengan strip)
-  const imageFileName = name.toLowerCase().replace(/[^a-z0-9]+/g, '-') + '.webp'
-  const imageUrl = `/workouts/${imageFileName}`
-  
-  // State untuk melacak jika gambar gagal dimuat (belum ada gambarnya)
+/* ─── Static GIF Component (Freeze Animation) ───────────── */
+function StaticGif({ src, alt }) {
+  const canvasRef = useRef(null)
   const [imgError, setImgError] = useState(false)
 
+  useEffect(() => {
+    if (!src || imgError) return
+    const img = new Image()
+    img.crossOrigin = "anonymous" // Dibutuhkan untuk membaca image data ke canvas
+    img.src = src
+    img.onload = () => {
+      const canvas = canvasRef.current
+      if (canvas) {
+        canvas.width = img.width
+        canvas.height = img.height
+        const ctx = canvas.getContext('2d')
+        ctx.drawImage(img, 0, 0)
+      }
+    }
+    img.onerror = () => setImgError(true)
+  }, [src, imgError])
+
+  if (imgError) {
+    return <div style={{ color: '#525252', fontSize: 12 }}>Gambar gagal dimuat</div>
+  }
+
   return (
-    <div className="card exercise-card" style={{ overflow: 'hidden' }}>
-      {/* Area Gambar / Ilustrasi */}
+    <canvas 
+      ref={canvasRef} 
+      style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+      aria-label={alt}
+    />
+  )
+}
+
+/* ─── Exercise Card (ExerciseDB GIF) ──────────────────────── */
+function ExerciseCard({ exercise, onSelect }) {
+  // Support both ExerciseDB format (gif_url) and local dataset format
+  const isExerciseDB = !!exercise.gif_url
+  const name = isExerciseDB ? exercise.name : (exercise.exercise_name || exercise.name || exercise.Workout || 'Gerakan')
+  const bodyPartLabel = isExerciseDB ? exercise.body_part : (exercise.body_part || exercise['Body Part'] || '')
+  const targetLabel = exercise.target || ''
+  const equipmentLabel = exercise.equipment || ''
+
+  return (
+    <div
+      className="card exercise-card"
+      style={{ overflow: 'hidden', cursor: isExerciseDB ? 'pointer' : 'default', transition: 'transform 0.2s, box-shadow 0.2s' }}
+      onClick={() => isExerciseDB && onSelect && onSelect(exercise)}
+      onMouseEnter={e => { if (isExerciseDB) { e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(34,197,94,0.12)' } }}
+      onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none' }}
+    >
+      {/* Area Gambar (Statis di Card View) */}
       <div style={{
-        width: '100%',
-        height: 130,
+        width: '100%', height: 180,
         background: 'linear-gradient(135deg, #0f1f15 0%, #111111 50%, #0a1a10 100%)',
         borderBottom: '1px solid #2a2a2a',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '12px 20px',
-        position: 'relative',
-        overflow: 'hidden',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', overflow: 'hidden',
       }}>
-        {/* Glow efek di belakang */}
         <div style={{
           position: 'absolute', inset: 0,
           background: 'radial-gradient(ellipse at center, rgba(34,197,94,0.04) 0%, transparent 70%)',
           pointerEvents: 'none',
         }} />
-        
-        {/* Area Gambar 3D atau SVG (Fallback) */}
-        <div style={{ width: 110, height: 110, position: 'relative', zIndex: 1, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          {!imgError ? (
-            <img 
-              src={imageUrl} 
-              alt={name}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-              onError={() => setImgError(true)}
-            />
-          ) : (
-            <div style={{ width: 90, height: 90 }}>
-              {getExerciseSVG(bodyPart)}
-            </div>
-          )}
-        </div>
+
+        {isExerciseDB ? (
+          /* Menggunakan canvas untuk mengambil frame pertama GIF agar tidak bergerak */
+          <StaticGif src={exercise.gif_url} alt={name} />
+        ) : (
+          /* Fallback: SVG orang lidi */
+          <div style={{ width: 90, height: 90 }}>
+            {getExerciseSVG(bodyPartLabel)}
+          </div>
+        )}
+
+
       </div>
 
       {/* Info */}
       <div style={{ padding: '14px 16px' }}>
-        <div style={{ fontSize: 14, fontWeight: 600, color: '#f5f5f5', marginBottom: 8, lineHeight: 1.3 }}>{name}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 6, gap: '8px' }}>
+          <div style={{ fontSize: 14, fontWeight: 600, color: '#f5f5f5', lineHeight: 1.3 }}>{name}</div>
+          {isExerciseDB && (
+            <div style={{
+              background: 'rgba(34,197,94,0.15)', border: '1px solid rgba(34,197,94,0.3)',
+              borderRadius: 6, padding: '3px 8px', flexShrink: 0,
+              fontSize: 10, color: '#22c55e', fontWeight: 600, whiteSpace: 'nowrap'
+            }}>
+              Lihat Detail →
+            </div>
+          )}
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+          {targetLabel && (
+            <span style={{ fontSize: 11, color: '#a3a3a3', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 4, padding: '2px 6px' }}>
+              🎯 {targetLabel}
+            </span>
+          )}
+          {equipmentLabel && (
+            <span style={{ fontSize: 11, color: '#a3a3a3', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 4, padding: '2px 6px' }}>
+              🏋️ {equipmentLabel}
+            </span>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
 
-        {exercise.description && (
-          <div style={{ fontSize: 12, color: '#525252', lineHeight: 1.5 }}>
-            {exercise.description.substring(0, 90)}{exercise.description.length > 90 ? '...' : ''}
+/* ─── Modal Detail Exercise ──────────────────────────────── */
+function ExerciseModal({ exercise, onClose }) {
+  if (!exercise) return null
+
+  return (
+    <div
+      style={{
+        position: 'fixed', inset: 0, zIndex: 1000,
+        background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(6px)',
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        padding: 20,
+      }}
+      onClick={onClose}
+    >
+      <div
+        style={{
+          background: '#111111', border: '1px solid #2a2a2a', borderRadius: 20,
+          maxWidth: 700, width: '100%', maxHeight: '90vh', overflow: 'auto',
+          padding: 0,
+        }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '20px 24px', borderBottom: '1px solid #2a2a2a' }}>
+          <h2 style={{ fontSize: 18, fontWeight: 700, color: '#f5f5f5', textTransform: 'capitalize' }}>{exercise.name}</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#a3a3a3', cursor: 'pointer', fontSize: 20, lineHeight: 1 }}>✕</button>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0 }}>
+          {/* GIF besar */}
+          <div style={{ background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: 300, padding: 20 }}>
+            <img
+              src={exercise.gif_url}
+              alt={exercise.name}
+              style={{ width: '100%', maxHeight: 280, objectFit: 'contain', borderRadius: 12 }}
+            />
+          </div>
+
+          {/* Info */}
+          <div style={{ padding: 24 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 20 }}>
+              <div>
+                <div style={{ fontSize: 10, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>Body Part</div>
+                <div style={{ fontSize: 14, color: '#22c55e', fontWeight: 600, textTransform: 'capitalize' }}>{exercise.body_part}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>Target</div>
+                <div style={{ fontSize: 14, color: '#f5f5f5', textTransform: 'capitalize' }}>{exercise.target}</div>
+              </div>
+              <div>
+                <div style={{ fontSize: 10, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 3 }}>Equipment</div>
+                <div style={{ fontSize: 14, color: '#f5f5f5', textTransform: 'capitalize' }}>{exercise.equipment || 'None'}</div>
+              </div>
+              {exercise.secondary_muscles?.length > 0 && (
+                <div>
+                  <div style={{ fontSize: 10, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 6 }}>Otot Tambahan</div>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                    {exercise.secondary_muscles.map((m, i) => (
+                      <span key={i} style={{ fontSize: 11, background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 4, padding: '2px 8px', color: '#a3a3a3', textTransform: 'capitalize' }}>{m}</span>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Instruksi Step by Step */}
+        {exercise.instructions?.length > 0 && (
+          <div style={{ padding: '20px 24px', borderTop: '1px solid #2a2a2a' }}>
+            <div style={{ fontSize: 12, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 14, fontWeight: 600 }}>Cara Melakukan</div>
+            <ol style={{ paddingLeft: 0, margin: 0, listStyle: 'none', display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {exercise.instructions.map((step, i) => (
+                <li key={i} style={{ display: 'flex', gap: 12, alignItems: 'flex-start' }}>
+                  <span style={{
+                    minWidth: 24, height: 24, borderRadius: '50%',
+                    background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)',
+                    color: '#22c55e', fontSize: 11, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>{i + 1}</span>
+                  <span style={{ fontSize: 13, color: '#a3a3a3', lineHeight: 1.6 }}>{step}</span>
+                </li>
+              ))}
+            </ol>
           </div>
         )}
       </div>

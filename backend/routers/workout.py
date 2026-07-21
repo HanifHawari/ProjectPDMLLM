@@ -1,11 +1,11 @@
-"""
-Router: /api/workout
-"""
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, Query, Response
+from fastapi.responses import StreamingResponse
 from typing import Optional
+import httpx
 
 from data_loader import ds, search_workout
 from models import APIResponse
+from exercise_api import search_by_name, search_by_body_part, get_exercise_detail, get_all_body_parts, fetch_exercise_gif, HEADERS, BASE_URL
 
 router = APIRouter()
 
@@ -108,3 +108,74 @@ async def generate_weekly_split(
             result[day_name] = day_exercises
 
     return APIResponse(success=True, data=result)
+
+
+# ==============================================================
+# ExerciseDB Endpoints (Animasi GIF gerakan)
+# ==============================================================
+
+@router.get("/gif/search")
+async def search_exercise_gif(
+    q: str = Query(..., description="Nama gerakan, contoh: push up, squat, curl")
+):
+    """
+    Cari latihan berdasarkan nama dari ExerciseDB.
+    Response berisi gif_url untuk animasi gerakan.
+    """
+    results = await search_by_name(q, limit=12)
+    if not results:
+        return APIResponse(success=False, message="Latihan tidak ditemukan di ExerciseDB", data=[])
+    return APIResponse(success=True, data=results, total=len(results))
+
+
+@router.get("/gif/body-part")
+async def search_exercise_gif_by_body_part(
+    body_part: str = Query(..., description="Body part, contoh: chest, back, legs, shoulders")
+):
+    """
+    Ambil latihan berdasarkan body part dari ExerciseDB.
+    Response berisi gif_url untuk animasi gerakan.
+    """
+    results = await search_by_body_part(body_part, limit=12)
+    if not results:
+        return APIResponse(success=False, message="Body part tidak ditemukan di ExerciseDB", data=[])
+    return APIResponse(success=True, data=results, total=len(results))
+
+
+@router.get("/gif/detail/{exercise_id}")
+async def get_exercise_gif_detail(exercise_id: str):
+    """
+    Ambil detail lengkap satu gerakan beserta instruksi step-by-step.
+    """
+    result = await get_exercise_detail(exercise_id)
+    if not result:
+        return APIResponse(success=False, message="Gerakan tidak ditemukan")
+    return APIResponse(success=True, data=result)
+
+
+@router.get("/gif/body-parts")
+async def list_gif_body_parts():
+    """Daftar semua body part yang tersedia di ExerciseDB."""
+    parts = await get_all_body_parts()
+    return APIResponse(success=True, data=parts, total=len(parts))
+
+
+@router.get("/gif/image/{exercise_id}")
+async def proxy_exercise_gif(exercise_id: str):
+    """
+    Proxy endpoint: Ambil gambar GIF dari ExerciseDB menggunakan RapidAPI key,
+    kemudian kirim ke frontend. Ini diperlukan karena ExerciseDB v2 gratis
+    tidak menyertakan gifUrl langsung dalam response JSON.
+    """
+    gif_bytes = await fetch_exercise_gif(exercise_id)
+    if gif_bytes:
+        return Response(
+            content=gif_bytes,
+            media_type="image/gif",
+            headers={
+                "Cache-Control": "public, max-age=86400",  # Cache 1 hari
+                "Access-Control-Allow-Origin": "*",
+            }
+        )
+    # Jika GIF tidak tersedia, coba fallback ke GIF langsung via redirect
+    return Response(status_code=404)
