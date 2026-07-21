@@ -1,35 +1,22 @@
-# Tahap 1: Build Frontend (Node.js)
-FROM node:20-slim AS frontend-build
-WORKDIR /app/frontend
-
-# Copy dependencies dan install
-COPY frontend/package*.json ./
-RUN npm install
-
-# Copy seluruh source code frontend dan jalankan build
-COPY frontend/ ./
-RUN npm run build
-
-
-# Tahap 2: Setup Backend (Python)
+# Setup Backend (Python)
 FROM python:3.12-slim
 WORKDIR /app
 
-# Install dependencies sistem yang mungkin dibutuhkan (termasuk psycopg2)
+# Install dependencies sistem yang mungkin dibutuhkan
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
-# Copy file requirements backend dan install
+# Trik Hemat Memori: Install PyTorch versi CPU agar ukuran instalasi sangat kecil (~200 MB) dibandingkan versi standar (~2.5 GB)
+RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
+
+# Copy file requirements backend dan install sisa dependencies
 COPY backend/requirements.txt ./backend/
 RUN pip install --no-cache-dir -r backend/requirements.txt
 
 # Copy source code backend
 COPY backend/ ./backend/
 
-# Copy dataset
+# Copy dataset (File CSV mentah yang besar 300MB sudah di-exclude lewat .dockerignore)
 COPY dataset/ ./dataset/
-
-# Copy hasil build frontend ke dalam backend/dist (agar FastAPI bisa melakukan serve)
-COPY --from=frontend-build /app/frontend/dist ./backend/dist
 
 # Konfigurasi Railway Port (Railway secara otomatis memberikan environment variable $PORT)
 ENV PORT=8000

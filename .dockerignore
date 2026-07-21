@@ -1,0 +1,7 @@
+frontend/
+venv/
+node_modules/
+dataset/program/programs_detailed_boostcamp_kaggle.csv
+__pycache__/
+.git/
+.env
