@@ -38,7 +38,8 @@ RAPIDAPI_KEY: str = os.getenv("RAPIDAPI_KEY", "")
 # ==============================================================
 APP_ENV: str = os.getenv("APP_ENV", "development")
 APP_HOST: str = os.getenv("APP_HOST", "0.0.0.0")
-APP_PORT: int = int(os.getenv("APP_PORT", "8000"))
+# Railway menggunakan variabel environment bernama 'PORT', bukan 'APP_PORT'
+APP_PORT: int = int(os.getenv("PORT", os.getenv("APP_PORT", "8000")))
 
 # ==============================================================
 # Dataset Paths (relatif dari backend/)
