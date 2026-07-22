@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import api from '../api'
+import { useToast, ToastContainer } from './Toast'
 
 /**
  * WorkoutPlanCard — Render workout plan JSON sebagai kartu visual interaktif.
@@ -7,6 +8,7 @@ import api from '../api'
 export function WorkoutPlanCard({ plan }) {
   const [expandedDay, setExpandedDay] = useState(null)
   const [syncing, setSyncing] = useState(false)
+  const { toasts, showToast, dismiss } = useToast()
 
   if (!plan) return null
   
@@ -46,19 +48,28 @@ export function WorkoutPlanCard({ plan }) {
     const phone = storedUser.phone
     
     if (!phone) {
-      alert('Nomor WhatsApp belum terdaftar! Silakan login/register ulang.')
+      showToast('Nomor WhatsApp belum terdaftar! Silakan login/register ulang.', 'warning', { title: 'Nomor Tidak Ditemukan' })
       return
     }
 
     setSyncing(true)
+    showToast('Sedang mengirim ke WhatsApp...', 'info', { title: 'Mengirim', duration: 3000 })
     try {
       const payload = { ...plan, phone }
       const res = await api.post('/whatsapp/send-plan', payload)
       if (res.data.success) {
-        alert('✅ Pesan WhatsApp berhasil dikirim!')
+        showToast('Program latihan berhasil dikirim ke WhatsApp kamu! 💪', 'success', { title: 'Terkirim!' })
       }
     } catch (err) {
-      alert(err.response?.data?.detail || 'Gagal mengirim WhatsApp. Cek token Fonnte di .env')
+      const detail = err.response?.data?.detail || ''
+      const isToken = detail.toLowerCase().includes('token') || detail.toLowerCase().includes('fonnte')
+      showToast(
+        isToken
+          ? 'Token Fonnte habis atau tidak valid. Hubungi admin untuk memperbarui token.'
+          : (detail || 'Gagal mengirim WhatsApp. Coba beberapa saat lagi.'),
+        'error',
+        { title: isToken ? 'Token Fonnte Habis' : 'Gagal Mengirim' }
+      )
     }
     setSyncing(false)
   }
@@ -189,6 +200,9 @@ export function WorkoutPlanCard({ plan }) {
           {syncing ? '⏳ Mengirim...' : '📱 Kirim ke WhatsApp'}
         </button>
       </div>
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   )
 }
@@ -198,6 +212,7 @@ export function WorkoutPlanCard({ plan }) {
  */
 export function MealPlanCard({ plan }) {
   const [syncing, setSyncing] = useState(false)
+  const { toasts, showToast, dismiss } = useToast()
 
   if (!plan) return null
 
@@ -225,7 +240,7 @@ export function MealPlanCard({ plan }) {
       link.click()
       link.parentNode.removeChild(link)
     } catch (err) {
-      alert('Gagal export ke calendar.')
+      showToast('Gagal export ke calendar.', 'error', { title: 'Export Gagal' })
     }
     setSyncing(false)
   }
@@ -236,19 +251,28 @@ export function MealPlanCard({ plan }) {
     const phone = storedUser.phone
     
     if (!phone) {
-      alert('Nomor WhatsApp belum terdaftar! Silakan login/register ulang.')
+      showToast('Nomor WhatsApp belum terdaftar! Silakan login/register ulang.', 'warning', { title: 'Nomor Tidak Ditemukan' })
       return
     }
 
     setSyncing(true)
+    showToast('Sedang mengirim meal plan ke WhatsApp...', 'info', { title: 'Mengirim', duration: 3000 })
     try {
       const payload = { ...plan, phone }
       const res = await api.post('/whatsapp/send-plan', payload)
       if (res.data.success) {
-        alert('✅ Pesan WhatsApp sedang dikirim!')
+        showToast('Meal plan berhasil dikirim ke WhatsApp kamu! 🥗', 'success', { title: 'Terkirim!' })
       }
     } catch (err) {
-      alert(err.response?.data?.detail || 'Gagal mengirim WhatsApp. Cek token Fonnte di .env')
+      const detail = err.response?.data?.detail || ''
+      const isToken = detail.toLowerCase().includes('token') || detail.toLowerCase().includes('fonnte')
+      showToast(
+        isToken
+          ? 'Token Fonnte habis atau tidak valid. Hubungi admin untuk memperbarui token.'
+          : (detail || 'Gagal mengirim WhatsApp. Coba beberapa saat lagi.'),
+        'error',
+        { title: isToken ? 'Token Fonnte Habis' : 'Gagal Mengirim' }
+      )
     }
     setSyncing(false)
   }
@@ -353,6 +377,9 @@ export function MealPlanCard({ plan }) {
           {syncing ? '⏳ Mengirim...' : '📱 Kirim ke WhatsApp'}
         </button>
       </div>
+
+      {/* Toast notifications */}
+      <ToastContainer toasts={toasts} onDismiss={dismiss} />
     </div>
   )
 }
