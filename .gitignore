@@ -13,8 +13,8 @@ backend/.env
 # SQLite database
 backend/*.db
 
-# Hasil build frontend (di-generate Railway saat deploy, tidak perlu di-commit)
-backend/dist/
+# Hasil build frontend (sekarang kita upload untuk mode monolith)
+# backend/dist/
 
 # Dataset besar (>100MB - tidak bisa di-push ke GitHub)
 dataset/program/cleaned_programs_detailed.csv
