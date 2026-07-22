@@ -54,44 +54,45 @@ async def search_food(
     return APIResponse(success=True, data=results, total=len(results))
 
 
+from database.db_engine import SessionLocal
+from database.db_models import DBHealthyFood, DBMasterNutrition
+
 @router.get("/healthy")
 async def get_healthy_foods(
     food_type: Optional[str] = Query(None, description="Tipe: Vegetable, Fruit, Protein, dll"),
     min_score: float = Query(60, description="Minimal health score"),
     limit: int = Query(20, le=100),
 ):
-    """Ambil makanan sehat dari healthy_foods_database."""
-    if ds.healthy_foods is None or ds.healthy_foods.empty:
-        return APIResponse(success=False, message="Dataset healthy foods tidak tersedia")
-
-    df = ds.healthy_foods.copy()
-
-    if "health_score" in df.columns:
-        df = df[df["health_score"] >= min_score]
-
-    if food_type and "food_type" in df.columns:
-        df = df[df["food_type"].str.contains(food_type, case=False, na=False)]
-
-    # Sort by health_score desc
-    if "health_score" in df.columns:
-        df = df.sort_values("health_score", ascending=False)
-
-    results = df.head(limit).fillna("").to_dict(orient="records")
-    return APIResponse(success=True, data=results, total=len(results))
+    """Ambil makanan sehat dari database."""
+    with SessionLocal() as db:
+        q = db.query(DBMasterNutrition).filter(DBMasterNutrition.health_score >= min_score)
+        
+        if food_type:
+            q = q.filter(DBMasterNutrition.food_type.ilike(f"%{food_type}%"))
+            
+        results = q.order_by(DBMasterNutrition.health_score.desc()).limit(limit).all()
+        
+        data = [{
+            "food_name": r.food_name,
+            "calories": r.calories,
+            "protein_g": r.protein_g,
+            "fat_g": r.fat_g,
+            "carbs_g": r.carbs_g,
+            "health_score": r.health_score,
+            "food_type": r.food_type,
+            "source": r.source
+        } for r in results]
+        
+        return APIResponse(success=True, data=data, total=len(data))
 
 
 @router.get("/food-types")
 async def get_food_types():
-    """Daftar unique food types dari healthy foods dataset."""
-    if ds.healthy_foods is None or ds.healthy_foods.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
-
-    col = next((c for c in ds.healthy_foods.columns if "type" in c.lower()), None)
-    if not col:
-        return APIResponse(success=False, data=[], total=0)
-
-    types = ds.healthy_foods[col].dropna().unique().tolist()
-    return APIResponse(success=True, data=sorted(types), total=len(types))
+    """Daftar unique food types dari dataset."""
+    with SessionLocal() as db:
+        results = db.query(DBMasterNutrition.food_type).distinct().all()
+        types = [r[0] for r in results if r[0]]
+        return APIResponse(success=True, data=sorted(types), total=len(types))
 
 
 @router.get("/meal-plan")
@@ -102,69 +103,83 @@ async def generate_meal_plan(
     no_dairy: bool = Query(False),
 ):
     """
-    Generate meal plan sederhana berdasarkan target kalori.
+    Generate meal plan sederhana berdasarkan target kalori menggunakan SQL.
     Dibagi: Breakfast 25%, Lunch 35%, Dinner 30%, Snack 10%.
     """
-    if ds.healthy_foods is None or ds.healthy_foods.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
+    with SessionLocal() as db:
+        q = db.query(DBMasterNutrition).filter(DBMasterNutrition.calories > 0)
+        
+        if diet_type:
+            q = q.filter(DBMasterNutrition.food_type.ilike(f"%{diet_type}%"))
+            
+        if no_gluten:
+            q = q.filter(DBMasterNutrition.contains_gluten == False)
+        if no_dairy:
+            q = q.filter(DBMasterNutrition.contains_dairy == False)
+            
+        # Ambil top 200 makanan tershat yang kalorinya tidak lebih besar dari 1.5x porsi maksimal (sekitar 1000 kal)
+        available = q.filter(DBMasterNutrition.calories <= target_calories * 0.5)\
+                     .order_by(DBMasterNutrition.health_score.desc()).limit(200).all()
+                     
+        if not available:
+            return APIResponse(success=False, message="Tidak ada makanan yang cocok dengan kriteria")
 
-    df = ds.healthy_foods.copy()
+        def pick_foods(target_cal: float, n: int = 3) -> list[dict]:
+            # Cari kombinasi sederhana: ambil n item pertama yang kalorinya mendekati target
+            # (Untuk MVP, ambil dari yang paling sehat)
+            picked = []
+            for item in available:
+                if len(picked) < n:
+                    picked.append({
+                        "food_name": item.food_name,
+                        "calories": item.calories,
+                        "protein_g": item.protein_g,
+                        "health_score": item.health_score
+                    })
+            return picked
 
-    # Filter berdasarkan diet type
-    if diet_type and "food_type" in df.columns:
-        df = df[df["food_type"].str.contains(diet_type, case=False, na=False)]
-
-    # Sort by health_score
-    if "health_score" in df.columns:
-        df = df.sort_values("health_score", ascending=False)
-
-    df = df.fillna("")
-
-    def pick_foods(target_cal: float, n: int = 3) -> list[dict]:
-        """Pilih n makanan yang kalorinya mendekati target."""
-        available = df[
-            (df["calories"] > 0) & (df["calories"] <= target_cal * 1.5)
-        ] if "calories" in df.columns else df
-        return available.head(n).to_dict(orient="records")
-
-    meal_plan = {
-        "target_calories": target_calories,
-        "breakdown": {
-            "Breakfast": {
-                "target_kcal": int(target_calories * 0.25),
-                "foods": pick_foods(target_calories * 0.25 / 3),
-            },
-            "Lunch": {
-                "target_kcal": int(target_calories * 0.35),
-                "foods": pick_foods(target_calories * 0.35 / 3),
-            },
-            "Dinner": {
-                "target_kcal": int(target_calories * 0.30),
-                "foods": pick_foods(target_calories * 0.30 / 3),
-            },
-            "Snack": {
-                "target_kcal": int(target_calories * 0.10),
-                "foods": pick_foods(target_calories * 0.10 / 2, n=2),
-            },
+        meal_plan = {
+            "target_calories": target_calories,
+            "breakdown": {
+                "Breakfast": {
+                    "target_kcal": int(target_calories * 0.25),
+                    "foods": pick_foods(target_calories * 0.25 / 3),
+                },
+                "Lunch": {
+                    "target_kcal": int(target_calories * 0.35),
+                    "foods": pick_foods(target_calories * 0.35 / 3),
+                },
+                "Dinner": {
+                    "target_kcal": int(target_calories * 0.30),
+                    "foods": pick_foods(target_calories * 0.30 / 3),
+                },
+                "Snack": {
+                    "target_kcal": int(target_calories * 0.10),
+                    "foods": pick_foods(target_calories * 0.10 / 2, n=2),
+                },
+            }
         }
-    }
-
-    return APIResponse(success=True, data=meal_plan)
+        return APIResponse(success=True, data=meal_plan)
 
 
 @router.get("/nutriscore-stats")
 async def get_nutriscore_distribution():
-    """Distribusi health score dari dataset makanan sehat."""
-    if ds.healthy_foods is None or ds.healthy_foods.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
-
-    if "health_score" not in ds.healthy_foods.columns:
-        return APIResponse(success=False, data={}, message="Kolom health_score tidak ditemukan")
-
-    # Buat distribusi: Excellent (80+), Good (60-79), Fair (40-59), Poor (<40)
-    df = ds.healthy_foods.copy()
-    df["score_category"] = df["health_score"].apply(
-        lambda s: "Excellent" if s >= 80 else ("Good" if s >= 60 else ("Fair" if s >= 40 else "Poor"))
-    )
-    dist = df["score_category"].value_counts().to_dict()
-    return APIResponse(success=True, data=dist)
+    """Distribusi health score dari dataset makanan sehat menggunakan SQL."""
+    with SessionLocal() as db:
+        # Menghitung secara efisien dengan kondisi SQL
+        # Excellent (80+), Good (60-79), Fair (40-59), Poor (<40)
+        from sqlalchemy import case, func
+        
+        score_case = case(
+            (DBMasterNutrition.health_score >= 80, "Excellent"),
+            (DBMasterNutrition.health_score >= 60, "Good"),
+            (DBMasterNutrition.health_score >= 40, "Fair"),
+            else_="Poor"
+        )
+        
+        results = db.query(score_case.label("category"), func.count().label("count"))\
+                    .group_by(score_case).all()
+                    
+        dist = {r.category: r.count for r in results}
+        
+        return APIResponse(success=True, data=dist)
