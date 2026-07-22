@@ -53,13 +53,11 @@ BACKEND_BASE_URL = f"http://{_host}:{APP_PORT}"
 
 def _make_gif_url(ex_id: str) -> str:
     """
-    Buat URL proxy GIF yang akan dilayani oleh backend kita sendiri.
-    Frontend memanggil /api/workout/gif/image/{id} → backend mengambil dari ExerciseDB.
+    Buat URL proxy GIF dengan relative path agar frontend bisa mengambilnya dari domain yang sama.
     """
     if not ex_id:
         return ""
-    # Tambahkan ?v=3 agar browser tidak memakai cache lama
-    return f"{BACKEND_BASE_URL}/api/workout/gif/image/{ex_id}?v=3"
+    return f"/api/workout/gif/image/{ex_id}?v=3"
 
 
 async def _normalize_exercise(ex: dict) -> dict:
