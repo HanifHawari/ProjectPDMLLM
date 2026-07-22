@@ -4,7 +4,7 @@ Router: /api/programs
 from fastapi import APIRouter, Query
 from typing import Optional
 
-from data_loader import ds, search_programs, get_program_detail
+from data_loader import search_programs, get_program_detail
 from models import APIResponse
 
 router = APIRouter()

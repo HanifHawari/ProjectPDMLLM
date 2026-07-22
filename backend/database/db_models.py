@@ -158,3 +158,97 @@ class ChatMessage(Base):
     def __repr__(self):
         preview = self.content[:40] if self.content else ''
         return f"<ChatMessage(id={self.id}, role='{self.role}', preview='{preview}...')>"
+
+
+# ==============================================================
+# 5. DATASET MODELS (Migrated from CSV)
+# ==============================================================
+
+class DBWorkout(Base):
+    __tablename__ = "dataset_workout"
+    id = Column(Integer, primary_key=True, index=True)
+    body_part = Column(Text, index=True)
+    type_of_muscle = Column(Text, index=True)
+    workout = Column(Text)
+    sets = Column(Text)
+    reps_per_set = Column(Text)
+    
+    # Precomputed lower
+    _body_part_lower = Column(Text, index=True)
+    _type_of_muscle_lower = Column(Text, index=True)
+
+class DBMasterNutrition(Base):
+    __tablename__ = "dataset_master_nutrition"
+    id = Column(Integer, primary_key=True, index=True)
+    food_name = Column(Text)
+    calories = Column(Float)
+    protein_g = Column(Float)
+    fat_g = Column(Float)
+    carbs_g = Column(Float)
+    fiber_g = Column(Float)
+    sugar_g = Column(Float)
+    sodium_mg = Column(Float)
+    health_score = Column(Float, index=True)
+    food_type = Column(Text, index=True)
+    source = Column(Text)
+    contains_gluten = Column(Boolean, default=False)
+    contains_dairy = Column(Boolean, default=False)
+    contains_nuts = Column(Boolean, default=False)
+    contains_soy = Column(Boolean, default=False)
+    contains_eggs = Column(Boolean, default=False)
+    contains_fish = Column(Boolean, default=False)
+    
+    # Precomputed lower
+    _food_name_lower = Column(Text)
+
+class DBHealthyFood(Base):
+    __tablename__ = "dataset_healthy_foods"
+    id = Column(Integer, primary_key=True, index=True)
+    food_name = Column(Text)
+    food_type = Column(Text)
+    calories = Column(Float)
+    protein_g = Column(Float)
+    fat_g = Column(Float)
+    carbs_g = Column(Float)
+    fiber_g = Column(Float)
+    sugar_g = Column(Float)
+    sodium_mg = Column(Float)
+    health_score = Column(Float)
+    
+    # Precomputed lower
+    _food_name_lower = Column(Text)
+
+class DBProgramSummary(Base):
+    __tablename__ = "dataset_program_summary"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(Text)
+    description = Column(Text)
+    level = Column(Text, index=True)
+    goal = Column(Text, index=True)
+    equipment = Column(Text, index=True)
+    program_length = Column(Text)
+    time_per_workout = Column(Text)
+    total_exercises = Column(Integer)
+    created = Column(Text)
+    last_edit = Column(Text)
+    
+    # Precomputed number
+    _weeks_num = Column(Integer, index=True)
+    
+class DBProgramDetail(Base):
+    __tablename__ = "dataset_program_detail"
+    id = Column(Integer, primary_key=True, index=True)
+    title = Column(Text)
+    description = Column(Text)
+    level = Column(Text)
+    goal = Column(Text)
+    equipment = Column(Text)
+    program_length = Column(Text)
+    time_per_workout = Column(Text)
+    week = Column(Integer, index=True)
+    day = Column(Integer, index=True)
+    number_of_exercises = Column(Integer)
+    exercise_name = Column(Text)
+    sets = Column(Text)
+    reps = Column(Text)
+    intensity = Column(Text)

@@ -4,7 +4,7 @@ Router: /api/nutrition
 from fastapi import APIRouter, Query
 from typing import Optional
 
-from data_loader import ds, search_foods, search_foods_allergen_free
+from data_loader import search_foods, search_foods_allergen_free
 from models import APIResponse
 
 router = APIRouter()

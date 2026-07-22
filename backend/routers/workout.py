@@ -3,7 +3,7 @@ from fastapi.responses import StreamingResponse
 from typing import Optional
 import httpx
 
-from data_loader import ds, search_workout
+from data_loader import search_workout
 from models import APIResponse
 from exercise_api import search_by_name, search_by_body_part, get_exercise_detail, get_all_body_parts, fetch_exercise_gif, HEADERS, BASE_URL
 

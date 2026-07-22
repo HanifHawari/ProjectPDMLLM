@@ -88,22 +88,9 @@ app.include_router(whatsapp.router,  prefix="/api/whatsapp",  tags=["WhatsApp"])
 # ==============================================================
 @app.get("/health", tags=["Health"])
 async def health_check():
-    from data_loader import ds
     return {
         "status": "healthy",
-        "datasets_loaded": {
-            "workout": ds.workout is not None and not ds.workout.empty,
-            "master_nutrition": ds.master_nutrition is not None and not ds.master_nutrition.empty,
-            "programs": ds.programs is not None and not ds.programs.empty,
-            "user_profiles": ds.user_profiles is not None and not ds.user_profiles.empty,
-            "programs_detail_lazy_loaded": ds._programs_detail_loaded,
-        },
-        "dataset_sizes": {
-            "workout_rows": len(ds.workout) if ds.workout is not None else 0,
-            "master_nutrition_rows": len(ds.master_nutrition) if ds.master_nutrition is not None else 0,
-            "programs_rows": len(ds.programs) if ds.programs is not None else 0,
-            "user_profiles_rows": len(ds.user_profiles) if ds.user_profiles is not None else 0,
-        }
+        "datasets_loaded": "All datasets migrated to Supabase SQL",
     }
 
 
