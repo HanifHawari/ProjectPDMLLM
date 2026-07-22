@@ -12,13 +12,14 @@ router = APIRouter()
 
 @router.get("")
 async def get_all_workouts():
-    """Ambil semua data workout dari CSV."""
-    if ds.workout is None or ds.workout.empty:
+    """Ambil semua data workout. (Backward compatibility untuk ExerciseDB)"""
+    results = await get_all_exercises_gif(limit=24)
+    if not results:
         return APIResponse(success=False, message="Dataset workout tidak tersedia")
     return APIResponse(
         success=True,
-        data=ds.workout.fillna("").to_dict(orient="records"),
-        total=len(ds.workout)
+        data=results,
+        total=len(results)
     )
 
 
@@ -27,8 +28,13 @@ async def search_workouts(
     body_part: Optional[str] = Query(None, description="Contoh: Chest, Back, Legs"),
     muscle: Optional[str] = Query(None, description="Contoh: Upper Chest, Hamstring"),
 ):
-    """Cari workout berdasarkan body_part atau muscle group."""
-    results = search_workout(body_part=body_part, muscle=muscle)
+    """Cari workout berdasarkan body_part atau muscle group. (Backward compatibility)"""
+    if body_part:
+        results = await search_by_body_part(body_part, limit=24)
+    elif muscle:
+        results = await search_by_name(muscle, limit=24)
+    else:
+        results = await get_all_exercises_gif(limit=24)
     return APIResponse(success=True, data=results, total=len(results))
 
 
