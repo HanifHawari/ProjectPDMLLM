@@ -16,11 +16,12 @@ function TypewriterMarkdown({ content, streaming }) {
 
     // Calculate how many characters to add to catch up smoothly
     const diff = content.length - displayedContent.length;
-    const charsToAdd = Math.max(1, Math.floor(diff / 30));
+    // Semakin besar pembagi, semakin sedikit karakter yang ditambahkan (lebih lambat)
+    const charsToAdd = Math.max(1, Math.floor(diff / 45));
 
     const timeout = setTimeout(() => {
       setDisplayedContent(prev => content.slice(0, prev.length + charsToAdd));
-    }, 40);
+    }, 60);
 
     return () => clearTimeout(timeout);
   }, [content, streaming, displayedContent]);

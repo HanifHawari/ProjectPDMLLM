@@ -13,7 +13,7 @@ Arsitektur Multi-Agent:
 Flow:
   User message
     → SupervisorAgent.route_and_stream()
-      → _classify_intent() [LLM-based + Regex fallback]
+      → _classify_intent() [Regex-based classification]
         → Agent terpilih.build_context() [RAG dari CSV]
           → Agent terpilih.stream() [LLM respons]
             → User
@@ -46,7 +46,7 @@ async def chat_stream(
     Stream respons dari sistem multi-agent.
 
     Supervisor akan:
-    1. Mengklasifikasikan intent pesan menggunakan LLM.
+    1. Mengklasifikasikan intent pesan menggunakan Regex untuk respons instan.
     2. Mendelegasikan ke agent spesialis yang tepat.
     3. Streaming respons agent ke pemanggil.
 
@@ -80,8 +80,8 @@ def detect_intent(message: str) -> tuple[str, dict]:
     """
     Deteksi intent dari pesan user (digunakan oleh chat.py untuk logging DB).
 
-    Sekarang menggunakan klasifikasi berbasis kata kunci yang lebih sederhana
-    karena klasifikasi utama (LLM-based) dilakukan async di dalam Supervisor.
+    Sekarang menggunakan klasifikasi berbasis kata kunci (Regex) 
+    agar lebih cepat dan efisien.
 
     Returns:
         (agent_name, {}) — agent_name: "fitness", "nutrition", atau "health"

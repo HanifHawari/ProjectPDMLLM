@@ -128,6 +128,23 @@ async def search_by_body_part(body_part: str, limit: int = 12) -> list[dict]:
     return []
 
 
+async def get_all_exercises_gif(limit: int = 24) -> list[dict]:
+    """Ambil semua exercise. Mengembalikan list dengan gif_url (proxy)."""
+    try:
+        async with httpx.AsyncClient(timeout=15) as client:
+            res = await client.get(
+                f"{BASE_URL}/exercises",
+                headers=HEADERS,
+                params={"limit": limit, "offset": 0},
+            )
+            if res.status_code == 200:
+                tasks = [_normalize_exercise(e) for e in res.json()]
+                return await asyncio.gather(*tasks)
+    except Exception as e:
+        print(f"[ExerciseDB] get_all_exercises_gif error: {e}")
+    return []
+
+
 async def get_exercise_detail(exercise_id: str) -> dict | None:
     """Ambil detail lengkap satu exercise berdasarkan ID."""
     try:

@@ -14,10 +14,6 @@ import json
 import logging
 from typing import AsyncGenerator
 
-from langchain_core.messages import SystemMessage, HumanMessage
-from langchain_google_genai import ChatGoogleGenerativeAI
-
-from config import GEMINI_API_KEY, GEMINI_MODEL
 from agents.fitness_agent import FitnessAgent
 from agents.nutrition_agent import NutritionAgent
 from agents.health_agent import HealthAgent
@@ -38,62 +34,15 @@ AGENT_REGISTRY: dict[str, object] = {
     "health": _health_agent,
 }
 
-# ==============================================================
-# LLM Client untuk Supervisor (sama seperti agent lain)
-# ==============================================================
-if GEMINI_API_KEY and GEMINI_API_KEY != "ISI_API_KEY_KAMU_DISINI":
-    llm_classifier = ChatGoogleGenerativeAI(
-        model=GEMINI_MODEL,
-        google_api_key=GEMINI_API_KEY,
-        temperature=0.0
-    )
-else:
-    llm_classifier = None
 
-# ==============================================================
-# Prompt Supervisor — untuk klasifikasi intent
-# ==============================================================
-_SUPERVISOR_PROMPT = """Kamu adalah Supervisor AI di sistem FitMind.
-Tugasmu HANYA mengklasifikasikan pertanyaan pengguna ke salah satu agent:
-
-- "fitness"   → pertanyaan tentang: latihan, gerakan gym, program workout, otot, jadwal latihan
-- "nutrition" → pertanyaan tentang: kalori, gizi, nutrisi makanan, alergen, diet, makanan sehat
-- "health"    → pertanyaan tentang: BMI, berat badan ideal, estimasi kalori terbakar, TDEE, analisis kesehatan
-
-ATURAN:
-1. Jawab HANYA dengan satu kata JSON: {"agent": "fitness"} atau {"agent": "nutrition"} atau {"agent": "health"}
-2. Jika pertanyaan mencakup dua domain, pilih yang paling dominan.
-3. Jika tidak ada yang cocok, jawab {"agent": "fitness"} sebagai default.
-4. JANGAN menulis penjelasan apapun. HANYA JSON."""
 
 
 async def _classify_intent(message: str) -> str:
     """
-    Gunakan LLM untuk mengklasifikasikan pesan ke agent yang tepat.
+    Gunakan regex untuk mengklasifikasikan pesan dengan cepat.
+    Ini mempercepat waktu respons AI (menghilangkan delay 5-6 detik dari LLM classifier).
     Returns: salah satu dari "fitness", "nutrition", "health"
     """
-    try:
-        if llm_classifier:
-            messages = [
-                SystemMessage(content=_SUPERVISOR_PROMPT),
-                HumanMessage(content=message)
-            ]
-            response = await llm_classifier.ainvoke(messages)
-            raw = response.content.strip()
-            
-            if "```json" in raw:
-                raw = raw.split("```json")[1].split("```")[0].strip()
-            elif "```" in raw:
-                raw = raw.split("```")[1].strip()
-                
-            parsed = json.loads(raw)
-            agent_name = parsed.get("agent", "fitness")
-            if agent_name in AGENT_REGISTRY:
-                return agent_name
-    except Exception as e:
-        logger.warning(f"[Supervisor] Klasifikasi LangChain LLM gagal ({e}), pakai fallback Regex.")
-
-    # --- Fallback: Regex sederhana jika LLM gagal ---
     return _classify_by_regex(message)
 
 

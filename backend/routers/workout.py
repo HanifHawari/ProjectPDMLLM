@@ -5,7 +5,7 @@ import httpx
 
 from data_loader import search_workout
 from models import APIResponse
-from exercise_api import search_by_name, search_by_body_part, get_exercise_detail, get_all_body_parts, fetch_exercise_gif, HEADERS, BASE_URL
+from exercise_api import search_by_name, search_by_body_part, get_exercise_detail, get_all_body_parts, fetch_exercise_gif, get_all_exercises_gif, HEADERS, BASE_URL
 
 router = APIRouter()
 
@@ -123,6 +123,20 @@ async def search_exercise_gif(
     Response berisi gif_url untuk animasi gerakan.
     """
     results = await search_by_name(q, limit=12)
+    if not results:
+        return APIResponse(success=False, message="Latihan tidak ditemukan di ExerciseDB", data=[])
+    return APIResponse(success=True, data=results, total=len(results))
+
+
+@router.get("/gif/all")
+async def get_all_exercise_gifs(
+    limit: int = Query(24, description="Batas jumlah data yang dikembalikan")
+):
+    """
+    Ambil semua latihan dari ExerciseDB.
+    Response berisi gif_url untuk animasi gerakan.
+    """
+    results = await get_all_exercises_gif(limit=limit)
     if not results:
         return APIResponse(success=False, message="Latihan tidak ditemukan di ExerciseDB", data=[])
     return APIResponse(success=True, data=results, total=len(results))

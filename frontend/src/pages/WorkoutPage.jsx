@@ -203,8 +203,8 @@ export default function WorkoutPage({ user }) {
         // Cari berdasarkan body part (ExerciseDB)
         res = await api.get('/workout/gif/body-part', { params: { body_part: bodyPart.toLowerCase() } })
       } else {
-        // Fallback: dataset lokal jika tidak ada filter
-        res = await api.get('/workout/search', { params: { limit: 24 } })
+        // Fallback: ambil semua data dari ExerciseDB
+        res = await api.get('/workout/gif/all', { params: { limit: 24 } })
       }
       setResults(res.data.data || [])
     } catch (_) { setResults([]) }
@@ -214,11 +214,15 @@ export default function WorkoutPage({ user }) {
   async function handleBodyPartFilter(bp) {
     setBodyPart(bp)
     setQuery('')
-    if (!bp) { setResults([]); setSearched(false); return }
     setLoading(true)
     setSearched(true)
     try {
-      const res = await api.get('/workout/gif/body-part', { params: { body_part: bp.toLowerCase() } })
+      let res
+      if (!bp) {
+        res = await api.get('/workout/gif/all', { params: { limit: 24 } })
+      } else {
+        res = await api.get('/workout/gif/body-part', { params: { body_part: bp.toLowerCase() } })
+      }
       setResults(res.data.data || [])
     } catch (_) { setResults([]) }
     setLoading(false)
