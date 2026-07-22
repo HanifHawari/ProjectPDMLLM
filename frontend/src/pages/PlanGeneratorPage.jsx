@@ -33,13 +33,6 @@ export default function PlanGeneratorPage({ user }) {
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState(null)
   const [error, setError] = useState('')
-  const [isMobile, setIsMobile] = useState(() => window.innerWidth <= 768)
-
-  useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth <= 768)
-    window.addEventListener('resize', handleResize)
-    return () => window.removeEventListener('resize', handleResize)
-  }, [])
 
   async function generate() {
     setLoading(true)
@@ -95,11 +88,7 @@ export default function PlanGeneratorPage({ user }) {
           ))}
         </div>
 
-        <div style={{
-          display: 'grid',
-          gridTemplateColumns: isMobile ? '1fr' : (plan ? '340px 1fr' : '1fr'),
-          gap: 24,
-        }}>
+        <div className={`plan-grid${plan ? '' : ' single'}`} style={{ gap: 24 }}>
           {/* ── Form ── */}
           <div className="card" style={{ padding: 24, alignSelf: 'start' }}>
             {/* Goal */}
