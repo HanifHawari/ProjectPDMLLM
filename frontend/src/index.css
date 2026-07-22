@@ -280,6 +280,16 @@ body {
   padding: 32px 36px;
 }
 
+/* Plan Generator Grid */
+.plan-grid {
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  gap: 24px;
+}
+.plan-grid.single {
+  grid-template-columns: 1fr;
+}
+
 /* ── Chat Sessions Sidebar (Desktop) ── */
 .chat-sessions-sidebar {
   width: 240px;
@@ -350,5 +360,10 @@ body {
   /* Chat input area padding on mobile */
   .chat-main > div:last-child {
     padding: 12px 14px 20px !important;
+  }
+  
+  /* Plan generator grid on mobile */
+  .plan-grid, .plan-grid.single {
+    grid-template-columns: 1fr !important;
   }
 }
