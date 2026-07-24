@@ -124,12 +124,33 @@ async def generate_meal_plan(
         if not available:
             return APIResponse(success=False, message="Tidak ada makanan yang cocok dengan kriteria")
 
+        import random
         def pick_foods(target_cal: float, n: int = 3) -> list[dict]:
-            # Cari kombinasi sederhana: ambil n item pertama yang kalorinya mendekati target
-            # (Untuk MVP, ambil dari yang paling sehat)
             picked = []
-            for item in available:
-                if len(picked) < n:
+            if not available:
+                return picked
+            
+            # Filter makanan yang masuk akal untuk porsi ini
+            valid_foods = [f for f in available if f.calories > 0 and f.calories <= target_cal]
+            if not valid_foods:
+                valid_foods = available
+                
+            shuffled = random.sample(valid_foods, min(len(valid_foods), n * 4))
+            
+            current_cal = 0
+            for item in shuffled:
+                if len(picked) < n and current_cal + item.calories <= target_cal * 1.2:
+                    picked.append({
+                        "food_name": item.food_name,
+                        "calories": item.calories,
+                        "protein_g": item.protein_g,
+                        "health_score": item.health_score
+                    })
+                    current_cal += item.calories
+                    
+            # Fallback jika terlalu strict
+            if not picked:
+                for item in valid_foods[:n]:
                     picked.append({
                         "food_name": item.food_name,
                         "calories": item.calories,

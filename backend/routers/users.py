@@ -165,10 +165,9 @@ async def upsert_profile(
         db.add(profile)
 
     # Update field yang dikirim (tidak overwrite dengan None jika tidak dikirim)
-    data = body.model_dump(exclude_unset=False)
+    data = body.model_dump(exclude_unset=True)
     for field, value in data.items():
-        if value is not None or field.startswith("no_"):
-            setattr(profile, field, value)
+        setattr(profile, field, value)
 
     # Hitung BMI otomatis
     profile.bmi = _compute_bmi(profile.weight_kg, profile.height_m)

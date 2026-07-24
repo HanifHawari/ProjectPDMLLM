@@ -6,6 +6,9 @@ from typing import Optional
 
 from data_loader import search_programs, get_program_detail
 from models import APIResponse
+from database.db_engine import SessionLocal
+from database.db_models import DBProgramSummary
+from sqlalchemy import func
 
 router = APIRouter()
 
@@ -34,37 +37,25 @@ async def list_programs(
 @router.get("/levels")
 async def get_levels():
     """Daftar level yang tersedia."""
-    if ds.programs is None or ds.programs.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
-    col = next((c for c in ds.programs.columns if c.lower() == "level"), None)
-    if not col:
-        return APIResponse(success=True, data=[])
-    levels = ds.programs[col].dropna().unique().tolist()
-    return APIResponse(success=True, data=sorted(levels))
+    with SessionLocal() as db:
+        levels = db.query(DBProgramSummary.level).filter(DBProgramSummary.level.isnot(None)).distinct().all()
+        return APIResponse(success=True, data=sorted([r[0] for r in levels if r[0]]))
 
 
 @router.get("/goals")
 async def get_goals():
     """Daftar goal yang tersedia."""
-    if ds.programs is None or ds.programs.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
-    col = next((c for c in ds.programs.columns if c.lower() == "goal"), None)
-    if not col:
-        return APIResponse(success=True, data=[])
-    goals = ds.programs[col].dropna().unique().tolist()
-    return APIResponse(success=True, data=sorted(goals))
+    with SessionLocal() as db:
+        goals = db.query(DBProgramSummary.goal).filter(DBProgramSummary.goal.isnot(None)).distinct().all()
+        return APIResponse(success=True, data=sorted([r[0] for r in goals if r[0]]))
 
 
 @router.get("/equipment")
 async def get_equipment_types():
     """Daftar equipment yang tersedia."""
-    if ds.programs is None or ds.programs.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
-    col = next((c for c in ds.programs.columns if "equipment" in c.lower()), None)
-    if not col:
-        return APIResponse(success=True, data=[])
-    equip = ds.programs[col].dropna().unique().tolist()
-    return APIResponse(success=True, data=sorted(equip))
+    with SessionLocal() as db:
+        equip = db.query(DBProgramSummary.equipment).filter(DBProgramSummary.equipment.isnot(None)).distinct().all()
+        return APIResponse(success=True, data=sorted([r[0] for r in equip if r[0]]))
 
 
 @router.get("/detail")
@@ -89,17 +80,19 @@ async def get_program_detail_endpoint(
 @router.get("/stats")
 async def get_program_stats():
     """Statistik ringkasan dari program library."""
-    if ds.programs is None or ds.programs.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
+    with SessionLocal() as db:
+        total = db.query(DBProgramSummary).count()
+        if total == 0:
+            return APIResponse(success=False, message="Dataset tidak tersedia")
 
-    df = ds.programs
-    stats = {
-        "total_programs": len(df),
-    }
+        stats = {"total_programs": total}
 
-    for col_name, key in [("level", "by_level"), ("goal", "by_goal"), ("equipment", "by_equipment")]:
-        col = next((c for c in df.columns if c.lower() == col_name), None)
-        if col:
-            stats[key] = df[col].value_counts().head(10).to_dict()
+        def get_top_10(column):
+            res = db.query(column, func.count(column)).group_by(column).order_by(func.count(column).desc()).limit(10).all()
+            return {r[0]: r[1] for r in res if r[0]}
 
-    return APIResponse(success=True, data=stats)
+        stats["by_level"] = get_top_10(DBProgramSummary.level)
+        stats["by_goal"] = get_top_10(DBProgramSummary.goal)
+        stats["by_equipment"] = get_top_10(DBProgramSummary.equipment)
+
+        return APIResponse(success=True, data=stats)
