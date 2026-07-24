@@ -10,6 +10,7 @@ import WorkoutPage from './pages/WorkoutPage'
 import ProfilePage from './pages/ProfilePage'
 import PlanGeneratorPage from './pages/PlanGeneratorPage'
 
+// Komponen Wrapper untuk membatasi akses halaman hanya untuk user yang sudah login/terdaftar
 function ProtectedRoute({ children, user }) {
   if (!user) return <Navigate to="/login" replace />
   return children
@@ -17,8 +18,9 @@ function ProtectedRoute({ children, user }) {
 
 export default function App() {
   const [user, setUser] = useState(null)
-  const [loaded, setLoaded] = useState(false)
+  const [loaded, setLoaded] = useState(false) // Flag untuk memastikan pengecekan localStorage selesai sebelum merender halaman
 
+  // Mengambil data pengguna dari localStorage saat aplikasi pertama kali dimuat
   useEffect(() => {
     const stored = localStorage.getItem('fitmind_user')
     if (stored) {
@@ -27,17 +29,19 @@ export default function App() {
     setLoaded(true)
   }, [])
 
+  // Callback untuk sinkronisasi state user ketika ada perubahan profil (misal: berat badan, tinggi badan)
   function handleProfileSaved() {
     const stored = localStorage.getItem('fitmind_user')
     if (stored) setUser(JSON.parse(stored))
   }
 
-  if (!loaded) return null
+  if (!loaded) return null // Menghindari flash halaman login jika user sebenarnya sudah terautentikasi
 
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        {/* Jika user sudah login, redirect otomatis dari login/register ke dashboard */}
         <Route path="/login" element={user ? <Navigate to="/dashboard" replace /> : <LoginPage />} />
         <Route path="/register" element={user ? <Navigate to="/dashboard" replace /> : <RegisterPage />} />
         <Route path="/dashboard" element={
