@@ -1,5 +1,6 @@
 # FitMind Enterprise Management System 🏋️‍♂️🏢
 
+![FitMind Enterprise](frontend/public/gym_hero_bg.png)
 **FitMind Enterprise Management System** adalah sebuah studi kasus sistem manajemen berskala besar (Enterprise) untuk jaringan *Fitness Center*. Sistem ini menyelesaikan masalah operasional di berbagai divisi berbeda menggunakan pendekatan **Multi-Agentic LLM**. 
 
 Terdapat beberapa divisi (agen) yang saling berinteraksi:
@@ -37,57 +38,8 @@ Proyek ini dibangun dengan memisahkan *Frontend* dan *Backend* untuk memastikan 
 
 ---
 
-## 🚀 Cara Menjalankan Proyek Secara Lokal
-
-Pastikan Anda sudah menginstal **Node.js** dan **Python 3.9+** di perangkat Anda.
-
-### 1. Kloning Repositori
-```bash
-git clone https://github.com/HanifHawari/ProjectPDMLLM.git
-cd WebsiteLLM
-```
-
-### 2. Menjalankan Backend
-```bash
-cd backend
-
-# Buat virtual environment (direkomendasikan)
-python -m venv venv
-# Aktifkan virtual environment
-# Windows:
-venv\Scripts\activate
-# Mac/Linux:
-# source venv/bin/activate
-
-# Instal dependensi Python
-pip install -r requirements.txt
-
-# Buat file .env dan isi dengan API Key Anda (seperti kredensial LLM)
-# cp .env.example .env (sesuaikan variabel di dalamnya)
-
-# Jalankan server
-python main.py
-```
-*(Secara default, backend FastAPI akan berjalan dan dapat diakses dokumentasi API-nya di `http://localhost:8000/docs`)*
-
-### 3. Menjalankan Frontend
-Buka terminal/tab baru dan jalankan:
-```bash
-cd frontend
-
-# Instal dependensi Node
-npm install
-
-# Jalankan frontend server (Vite)
-npm run dev
-```
-*(Buka URL yang ditampilkan di terminal, biasanya `http://localhost:5173` untuk melihat website).*
-
----
-
 ## 👥 Tim Pengembang
 
 Proyek FitMind AI dibangun oleh:
 - **M Hanif Hawari** – Backend Developer
 - **M Dian Fauzi** – Frontend Developer
-- **Adhitya Surya Handika** – AI Engineer
