@@ -33,11 +33,14 @@ export default function PlanGeneratorPage({ user }) {
   const [loading, setLoading] = useState(false)
   const [plan, setPlan] = useState(null)
   const [error, setError] = useState('')
+  const [generationTime, setGenerationTime] = useState(null)
 
   async function generate() {
     setLoading(true)
     setError('')
     setPlan(null)
+    setGenerationTime(null)
+    const startTime = Date.now()
     try {
       const body = {
         plan_type: tab,
@@ -49,8 +52,10 @@ export default function PlanGeneratorPage({ user }) {
         notes: notes || undefined,
       }
       const res = await api.post('/plans/generate', body)
+      const endTime = Date.now()
       if (res.data.success && res.data.data) {
         setPlan(res.data.data)
+        setGenerationTime(((endTime - startTime) / 1000).toFixed(2))
       } else {
         setError('Gagal generate plan. Coba lagi.')
       }
@@ -197,8 +202,8 @@ export default function PlanGeneratorPage({ user }) {
           {plan && (
             <div>
               {tab === 'workout'
-                ? <WorkoutPlanCard plan={plan} />
-                : <MealPlanCard plan={plan} />}
+                ? <WorkoutPlanCard plan={plan} generationTime={generationTime} />
+                : <MealPlanCard plan={plan} generationTime={generationTime} />}
             </div>
           )}
 

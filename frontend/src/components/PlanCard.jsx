@@ -5,7 +5,7 @@ import { useToast, ToastContainer } from './Toast'
 /**
  * WorkoutPlanCard — Render workout plan JSON sebagai kartu visual interaktif.
  */
-export function WorkoutPlanCard({ plan }) {
+export function WorkoutPlanCard({ plan, generationTime }) {
   const [expandedDay, setExpandedDay] = useState(null)
   const [syncing, setSyncing] = useState(false)
   const { toasts, showToast, dismiss } = useToast()
@@ -92,6 +92,11 @@ export function WorkoutPlanCard({ plan }) {
           {plan.goal && <span className="badge-gray">{plan.goal}</span>}
           {plan.days_per_week && (
             <span className="badge-gray">{plan.days_per_week} hari/minggu</span>
+          )}
+          {generationTime && (
+            <span className="badge-gray" style={{ color: '#a855f7', borderColor: 'rgba(168,85,247,0.3)', background: 'rgba(168,85,247,0.1)' }}>
+              ⚡ AI: {generationTime}s
+            </span>
           )}
         </div>
       </div>
@@ -210,7 +215,7 @@ export function WorkoutPlanCard({ plan }) {
 /**
  * MealPlanCard — Render meal plan JSON sebagai kartu visual.
  */
-export function MealPlanCard({ plan }) {
+export function MealPlanCard({ plan, generationTime }) {
   const [syncing, setSyncing] = useState(false)
   const { toasts, showToast, dismiss } = useToast()
 
@@ -296,6 +301,11 @@ export function MealPlanCard({ plan }) {
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f5f5f5' }}>
             {plan.title || 'Meal Plan'}
           </h3>
+          {generationTime && (
+            <span className="badge-gray" style={{ marginLeft: 'auto', color: '#a855f7', borderColor: 'rgba(168,85,247,0.3)', background: 'rgba(168,85,247,0.1)', fontSize: 13, padding: '4px 10px' }}>
+              ⚡ AI: {generationTime}s
+            </span>
+          )}
         </div>
         {/* Macro summary */}
         <div style={{ display: 'flex', gap: 16, flexWrap: 'wrap' }}>
