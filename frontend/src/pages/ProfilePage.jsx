@@ -7,7 +7,6 @@ const goals = ['Weight Loss', 'Muscle Gain', 'Endurance', 'Maintenance', 'Flexib
 const levels = ['Beginner', 'Intermediate', 'Advanced']
 const workoutTypes = ['Strength', 'Cardio', 'HIIT', 'Yoga', 'Mixed']
 const equipments = ['None', 'Dumbbells', 'Barbell', 'Machine', 'Full Gym']
-const dietTypes = ['', 'vegan', 'vegetarian', 'keto', 'paleo', 'halal']
 
 export default function ProfilePage({ user, onProfileSaved }) {
   const [form, setForm] = useState({
@@ -56,7 +55,7 @@ export default function ProfilePage({ user, onProfileSaved }) {
         })
         if (data.bmi) setBmi(data.bmi)
       }
-    } catch (_) {}
+    } catch {}
     setFetching(false)
   }
 
@@ -84,7 +83,7 @@ export default function ProfilePage({ user, onProfileSaved }) {
 
       setSaved(true)
       setTimeout(() => navigate('/dashboard'), 1200)
-    } catch (_) {}
+    } catch {}
     setLoading(false)
   }
 

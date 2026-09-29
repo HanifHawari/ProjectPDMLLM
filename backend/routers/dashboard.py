@@ -2,9 +2,7 @@
 Router: /api/dashboard
 Statistik referensi dari dataset untuk dashboard & kalkulasi personal.
 """
-import math
 from fastapi import APIRouter, Query
-from typing import Optional
 
 from data_loader import get_user_stats_summary
 from models import APIResponse

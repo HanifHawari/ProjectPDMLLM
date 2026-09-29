@@ -5,6 +5,8 @@ WORKDIR /app
 # Install dependencies sistem yang mungkin dibutuhkan
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y libpq-dev gcc && rm -rf /var/lib/apt/lists/*
 
+RUN python -m pip install --no-cache-dir --upgrade 'pip>=26.2.1'
+
 # Trik Hemat Memori: Install PyTorch versi CPU agar ukuran instalasi sangat kecil (~200 MB) dibandingkan versi standar (~2.5 GB)
 RUN pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cpu
 
@@ -20,6 +22,7 @@ COPY dataset/ ./dataset/
 
 # Konfigurasi Railway Port (Railway secara otomatis memberikan environment variable $PORT)
 ENV PORT=8000
+ENV APP_ENV=production
 EXPOSE $PORT
 
 # Menjalankan server

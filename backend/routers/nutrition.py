@@ -55,7 +55,7 @@ async def search_food(
 
 
 from database.db_engine import SessionLocal
-from database.db_models import DBHealthyFood, DBMasterNutrition
+from database.db_models import DBMasterNutrition
 
 @router.get("/healthy")
 async def get_healthy_foods(

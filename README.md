@@ -1,45 +1,30 @@
-# FitMind Enterprise Management System 🏋️‍♂️🏢
+﻿# FitMindAI
 
-![FitMind Enterprise](frontend/public/gym_hero_bg.png)
-**FitMind Enterprise Management System** adalah sebuah studi kasus sistem manajemen berskala besar (Enterprise) untuk jaringan *Fitness Center*. Sistem ini menyelesaikan masalah operasional di berbagai divisi berbeda menggunakan pendekatan **Multi-Agentic LLM**. 
+FitMindAI adalah aplikasi kebugaran dengan landing page, akun pengguna, AI Chat, AI Plan, pencarian latihan dan nutrisi, kalkulator dashboard, serta ekspor rencana ke kalender atau WhatsApp.
 
-Terdapat beberapa divisi (agen) yang saling berinteraksi:
-- **Divisi Operasional (Fitness Agent)**: Mengelola dan memberikan rekomendasi seputar fasilitas gym, teknik latihan, dan ketersediaan alat.
-- **Divisi F&B (Nutrition Agent)**: Mengatur *meal plan* dan nutrisi klien sesuai dengan alergi dan kondisi kesehatan.
-- **Divisi Medis/Klinik (Health Agent)**: Menangani kalkulasi kalori, BMI, zona detak jantung, dan aspek klinis kebugaran.
-- **Divisi Perencanaan (Planner Agent)**: Menyusun jadwal komprehensif harian/mingguan.
-Semua divisi ini dikoordinasikan secara cerdas oleh **Supervisor Agent** (Manajer Utama).
+## Struktur
 
----
+- `frontend/` — React 19, Vite, dan React Router.
+- `backend/` — FastAPI, SQLAlchemy, layanan AI, dan penyaji hasil build frontend.
+- `dataset/` — CSV sumber untuk data latihan, nutrisi, dan program.
+- `backend/chroma_db/` — indeks vektor untuk RAG. Jangan hapus tanpa rencana pembuatan ulang.
 
-## ✨ Fitur Unggulan
+## Menjalankan secara lokal
 
-- 🤖 **Enterprise Multi-Agent Architecture**: Dibangun menggunakan *framework* LangChain dengan beberapa agen independen yang mewakili divisi perusahaan.
-- 🧠 **Vector Database & RAG (Retrieval-Augmented Generation)**: Pencarian semantik menggunakan **ChromaDB** dan *Embeddings* untuk menarik data secara akurat dari basis data perusahaan.
-- 🥗 **Nutrisi & Operasional Cerdas**: Kalkulasi asupan kalori dan *meal plan* sehat yang terintegrasi dengan ketersediaan peralatan gym (*full gym, dumbbell, bodyweight*).
-- 💬 **Asisten AI 24/7**: Chatbot manajer yang siap mendelegasikan pertanyaan ke divisi yang tepat.
+1. Salin `backend/.env.example` menjadi `backend/.env`. Isi kunci layanan yang digunakan dan buat `SESSION_SECRET` acak yang panjang. File `.env` tidak boleh dikomit.
+2. Buat virtual environment Python di `backend/.venv` dan pasang `backend/requirements.txt`. Jalankan `npm install` di `frontend/`.
+3. Jalankan `backend/start.bat` pada Windows, lalu `npm run dev` di `frontend/`.
+4. Untuk memperbarui halaman yang disajikan backend, jalankan `npm run build` di `frontend/` dan salin isi `frontend/dist/` ke `backend/dist/`.
 
-## 🛠️ Teknologi yang Digunakan
+Vite memakai proxy `/api` ke `http://localhost:8000`. Jika frontend dan backend ada di origin berbeda, atur `VITE_API_URL` di frontend serta `ALLOWED_ORIGINS` di backend. Backend memakai `DATABASE_URL` jika diset; jika tidak, backend membuat SQLite lokal.
 
-Proyek ini dibangun dengan memisahkan *Frontend* dan *Backend* untuk memastikan performa yang cepat, struktur yang bersih, dan skalabilitas yang baik.
+## Keamanan dan data
 
-### Frontend
-- **React 19** (dibangun dengan **Vite**)
-- **Tailwind CSS v4** untuk styling yang cepat dan responsif
-- **React Router** untuk navigasi halaman (*Single Page Application*)
-- **Three.js / React Three Fiber** untuk elemen interaktif/3D 
+API akun memakai token sesi. Gunakan `SESSION_SECRET` yang sama pada semua instance backend supaya sesi tetap berlaku setelah restart. Untuk deployment, gunakan HTTPS dan simpan kunci layanan serta kredensial database pada environment server.
 
-### Backend
-- **FastAPI (Python)** untuk API server yang sangat cepat dan asinkron
-- **Google GenAI** sebagai model bahasa (LLM) utama
-- **SQLite / SQLAlchemy** untuk penyimpanan data dan *user management*
-- **Pandas & NumPy** untuk manipulasi dan analisis dataset besar (data nutrisi dan latihan)
-- **Uvicorn** sebagai ASGI web server
+File SQLite lokal dapat berisi akun dan percakapan. `.dockerignore` mencegahnya masuk ke image; gunakan `DATABASE_URL` ke penyimpanan persisten di deployment. Endpoint AI, RapidAPI, dan WhatsApp memerlukan pembatasan laju request di lapisan deployment agar tidak disalahgunakan.
 
----
+## Tim pengembang
 
-## 👥 Tim Pengembang
-
-Proyek FitMind AI dibangun oleh:
-- **M Hanif Hawari** – Backend Developer
-- **M Dian Fauzi** – Frontend Developer
+- M Hanif Hawari — Backend Developer
+- M Dian Fauzi — Frontend Developer

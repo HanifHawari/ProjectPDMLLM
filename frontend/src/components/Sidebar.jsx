@@ -1,4 +1,4 @@
-import { NavLink, useNavigate } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import { useState } from 'react'
 
 // SVG Icons — transparan seperti sketsa outline
@@ -61,10 +61,10 @@ const navItems = [
 ]
 
 export default function Sidebar({ username }) {
-  const navigate = useNavigate()
   const [mobileOpen, setMobileOpen] = useState(false)
 
   function handleLogout() {
+    localStorage.removeItem('fitmind_token')
     localStorage.removeItem('fitmind_user')
     localStorage.removeItem('fitmind_profile')
     setMobileOpen(false)

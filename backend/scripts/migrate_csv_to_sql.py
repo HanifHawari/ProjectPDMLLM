@@ -1,4 +1,3 @@
-import os
 import sys
 import logging
 from pathlib import Path
@@ -13,7 +12,7 @@ from database.db_models import (
     DBProgramSummary, DBProgramDetail
 )
 import pandas as pd
-from config import WORKOUT_CSV, HEALTHY_FOODS_CSV, NUTRITION_CSV, PROGRAMS_CSV, PROGRAMS_DETAIL_CSV
+from config import WORKOUT_CSV, HEALTHY_FOODS_CSV, MASTER_NUTRITION_CSV, PROGRAMS_CSV, PROGRAMS_DETAIL_CSV
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -33,7 +32,7 @@ def migrate():
         logger.info("Membaca file CSV...")
         df_workout = pd.read_csv(WORKOUT_CSV)
         df_healthy_foods = pd.read_csv(HEALTHY_FOODS_CSV)
-        df_master_nutrition = pd.read_csv(NUTRITION_CSV)
+        df_master_nutrition = pd.read_csv(MASTER_NUTRITION_CSV)
         df_programs = pd.read_csv(PROGRAMS_CSV)
         
         # --- Workout ---

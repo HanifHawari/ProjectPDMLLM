@@ -15,7 +15,7 @@ export default function RegisterPage() {
   // Fungsi cek kekuatan password
   const getPasswordStrength = (pwd) => {
     if (!pwd) return { score: 0, color: 'transparent', label: '' }
-    if (pwd.length < 6) return { score: 1, color: '#ef4444', label: 'Lemah' } // Merah
+    if (pwd.length < 8) return { score: 1, color: '#ef4444', label: 'Lemah' } // Merah
     const hasNumber = /\d/.test(pwd)
     const hasSpecial = /[^A-Za-z0-9]/.test(pwd)
     const hasUpper = /[A-Z]/.test(pwd)
@@ -31,6 +31,10 @@ export default function RegisterPage() {
   async function handleRegister(e) {
     e.preventDefault()
     if (!username.trim() || !phone.trim() || !password.trim()) return
+    if (password.length < 8 || new TextEncoder().encode(password).length > 72) {
+      setError('Password harus 8–72 byte.')
+      return
+    }
     setLoading(true)
     setError('')
     setSuccess(false)
@@ -137,6 +141,8 @@ export default function RegisterPage() {
                 type={showPassword ? "text" : "password"}
                 placeholder="Buat password..."
                 value={password}
+                minLength={8}
+                maxLength={72}
                 onChange={e => {
                   setPassword(e.target.value)
                   setSuccess(false)

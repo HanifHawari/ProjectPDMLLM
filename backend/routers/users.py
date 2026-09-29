@@ -1,9 +1,9 @@
 """
 Router: /api/users
-Manajemen user berdasarkan username (tanpa password/auth).
+Manajemen akun dan data pribadi pengguna.
 
 Alur:
-  POST /api/users/login  → get-or-create user berdasarkan username
+  POST /api/users/login  → verifikasi password dan terbitkan token sesi
   GET  /api/users/{username}/profile   → ambil profil kebugaran
   PUT  /api/users/{username}/profile   → simpan / update profil kebugaran
   GET  /api/users/{username}/sessions  → daftar sesi chat user
@@ -12,14 +12,15 @@ Alur:
 """
 import logging
 from typing import Optional
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from database.db_engine import get_db
 from database.db_models import User, UserProfile, ChatSession, ChatMessage
+from auth import create_access_token, get_current_user
 from models import (
     APIResponse, UserCreate, UserProfileUpdate,
-    UserResponse, SessionResponse, MessageResponse
+    UserResponse
 )
 import bcrypt
 
@@ -31,11 +32,10 @@ router = APIRouter()
 # Helper
 # ==============================================================
 
-def _get_user_or_404(username: str, db: Session) -> User:
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        raise HTTPException(status_code=404, detail=f"User '{username}' tidak ditemukan")
-    return user
+def _get_owned_user(username: str, current_user: User) -> User:
+    if current_user.username != username:
+        raise HTTPException(status_code=403, detail="Akses ke akun ini ditolak.")
+    return current_user
 
 
 def _compute_bmi(weight_kg: Optional[float], height_m: Optional[float]) -> Optional[float]:
@@ -57,9 +57,10 @@ async def login(body: UserCreate, db: Session = Depends(get_db)):
     existing = db.query(User).filter(User.username == username).first()
     
     if not existing:
-        raise HTTPException(status_code=404, detail="Username tidak ditemukan. Silakan daftar terlebih dahulu.")
+        raise HTTPException(status_code=401, detail="Username atau password salah.")
         
-    if not existing.password_hash or not bcrypt.checkpw(body.password.encode('utf-8'), existing.password_hash.encode('utf-8')):
+    password_bytes = body.password.encode("utf-8")
+    if len(password_bytes) > 72 or not existing.password_hash or not bcrypt.checkpw(password_bytes, existing.password_hash.encode("utf-8")):
         raise HTTPException(status_code=401, detail="Username atau password salah.")
 
     logger.info(f"User login: '{username}' (id={existing.id})")
@@ -68,7 +69,19 @@ async def login(body: UserCreate, db: Session = Depends(get_db)):
         username=existing.username,
         phone=existing.phone,
         is_new=False,
-        has_profile=existing.profile is not None
+        has_profile=existing.profile is not None,
+        token=create_access_token(existing),
+    )
+
+
+@router.get("/me", response_model=UserResponse)
+async def get_me(current_user: User = Depends(get_current_user)):
+    return UserResponse(
+        id=current_user.id,
+        username=current_user.username,
+        phone=current_user.phone,
+        is_new=False,
+        has_profile=current_user.profile is not None,
     )
 
 @router.post("/register", response_model=UserResponse)
@@ -82,6 +95,9 @@ async def register(body: UserCreate, db: Session = Depends(get_db)):
     
     if existing:
         raise HTTPException(status_code=400, detail="Username sudah terdaftar. Silakan login.")
+
+    if len(body.password) < 8 or len(body.password.encode("utf-8")) > 72:
+        raise HTTPException(status_code=400, detail="Password harus 8–72 byte.")
 
     if not body.phone:
         raise HTTPException(status_code=400, detail="Nomor WhatsApp wajib diisi untuk keamanan automation.")
@@ -107,9 +123,9 @@ async def register(body: UserCreate, db: Session = Depends(get_db)):
 # GET /profile — ambil profil kebugaran
 # ==============================================================
 @router.get("/{username}/profile")
-async def get_profile(username: str, db: Session = Depends(get_db)):
+async def get_profile(username: str, current_user: User = Depends(get_current_user)):
     """Ambil profil kebugaran user. 404 jika user belum ada, 204 jika profil belum diisi."""
-    user = _get_user_or_404(username, db)
+    user = _get_owned_user(username, current_user)
 
     if not user.profile:
         return APIResponse(success=True, data=None,
@@ -150,14 +166,15 @@ async def get_profile(username: str, db: Session = Depends(get_db)):
 async def upsert_profile(
     username: str,
     body: UserProfileUpdate,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Simpan atau update profil kebugaran user.
     Jika profil sudah ada → update kolom yang dikirim saja.
     Jika belum ada → buat profil baru.
     """
-    user = _get_user_or_404(username, db)
+    user = _get_owned_user(username, current_user)
 
     profile = user.profile
     if not profile:
@@ -189,11 +206,12 @@ async def upsert_profile(
 @router.get("/{username}/sessions")
 async def get_sessions(
     username: str,
-    limit: int = 20,
-    db: Session = Depends(get_db)
+    limit: int = Query(20, ge=1, le=100),
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Ambil daftar sesi chat user (terbaru dulu)."""
-    user = _get_user_or_404(username, db)
+    user = _get_owned_user(username, current_user)
 
     sessions = (
         db.query(ChatSession)
@@ -224,10 +242,11 @@ async def get_sessions(
 async def get_session_messages(
     username: str,
     session_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Ambil semua pesan dalam satu sesi chat."""
-    user = _get_user_or_404(username, db)
+    user = _get_owned_user(username, current_user)
 
     session = db.query(ChatSession).filter(
         ChatSession.id == session_id,
@@ -270,10 +289,11 @@ async def get_session_messages(
 async def delete_session(
     username: str,
     session_id: int,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """Hapus sesi chat beserta semua pesannya."""
-    user = _get_user_or_404(username, db)
+    user = _get_owned_user(username, current_user)
 
     session = db.query(ChatSession).filter(
         ChatSession.id == session_id,

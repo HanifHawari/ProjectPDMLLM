@@ -23,17 +23,15 @@ try:
     RAGAS_AVAILABLE = True
 except ImportError as e:
     logger.warning(f"Ragas atau dependensinya tidak dapat dimuat: {e}")
-    logger.warning("Menggunakan mode simulasi evaluasi (karena masalah kompatibilitas Python 3.14).")
+    logger.warning("Menggunakan mode simulasi evaluasi karena dependensi tidak tersedia.")
     RAGAS_AVAILABLE = False
 
 import config
-from data_loader import load_all_datasets
 from vector_store import init_vector_stores
 from agents.supervisor import _classify_intent, AGENT_REGISTRY
 
 async def run_evaluation():
     logger.info("Mempersiapkan Dataset dan Vector Store...")
-    load_all_datasets()
     init_vector_stores()
     
     # Kumpulan Test Cases

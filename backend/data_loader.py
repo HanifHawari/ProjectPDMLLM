@@ -1,39 +1,13 @@
 """
 FitMind AI - Data Loader (Migrated to SQL)
-Semua fungsi pencarian sekarang menggunakan SQLAlchemy untuk melakukan query
-langsung ke Supabase, menghemat ratusan MB RAM (karena Pandas dihapus).
+Fungsi pencarian menggunakan SQLAlchemy untuk membaca database yang dikonfigurasi.
 """
-import logging
 from sqlalchemy import or_
 
 from database.db_engine import SessionLocal
 from database.db_models import (
-    DBWorkout, DBMasterNutrition, DBHealthyFood,
-    DBProgramSummary, DBProgramDetail
+    DBWorkout, DBMasterNutrition, DBProgramSummary, DBProgramDetail
 )
-
-logger = logging.getLogger(__name__)
-
-# Kita tidak lagi butuh Pandas dan DataStore di RAM.
-# Fungsi load_all_datasets(), dsb tidak lagi melakukan apa-apa 
-# selain memberi log agar tidak mematahkan import lama jika masih ada.
-def load_all_datasets():
-    logger.info("SQL Data Loader siap.")
-
-def load_master_nutrition():
-    pass
-
-def load_healthy_foods():
-    pass
-
-def load_programs():
-    pass
-
-def load_programs_detail():
-    pass
-
-def invalidate_search_caches():
-    logger.info("Cache invalided (Database queries always fresh).")
 
 # ==============================================================
 # Query Helpers

@@ -3,8 +3,7 @@ Exercise API Service
 Menghubungkan ke ExerciseDB via RapidAPI untuk mendapatkan data latihan + GIF animasi.
 """
 import httpx
-from functools import lru_cache
-from config import RAPIDAPI_KEY, APP_HOST, APP_PORT
+from config import RAPIDAPI_KEY
 
 from deep_translator import GoogleTranslator
 
@@ -43,12 +42,6 @@ def translate_instructions(instructions: list[str]) -> list[str]:
         pass
     return instructions
 
-
-
-# Backend base URL untuk proxy GIF
-# Gunakan localhost jika APP_HOST adalah 0.0.0.0 (artinya listen di semua interface)
-_host = "localhost" if APP_HOST in ("0.0.0.0", "") else APP_HOST
-BACKEND_BASE_URL = f"http://{_host}:{APP_PORT}"
 
 
 def _make_gif_url(ex_id: str) -> str:

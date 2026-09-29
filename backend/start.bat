@@ -1,16 +1,20 @@
 @echo off
+cd /d "%~dp0"
 echo ============================================
 echo   FitMind AI Backend - Starting Server...
 echo ============================================
 echo.
 
-REM Aktifkan virtual environment
-call venv\Scripts\activate.bat
+REM Gunakan virtual environment aktif project
+if not exist .venv\Scripts\python.exe (
+    echo [ERROR] Virtual environment .venv tidak ditemukan!
+    exit /b 1
+)
 
 REM Cek .env
 if not exist .env (
     echo [ERROR] File .env tidak ditemukan!
-    echo Silakan copy .env.example ke .env dan isi GEMINI_API_KEY
+    echo Silakan copy .env.example ke .env lalu isi konfigurasi yang diperlukan
     pause
     exit /b 1
 )
@@ -23,5 +27,5 @@ echo.
 echo Tekan CTRL+C untuk stop server
 echo.
 
-python main.py
+".venv\Scripts\python.exe" main.py
 pause

@@ -1,16 +1,18 @@
-from fastapi import APIRouter, Query, Response
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, Depends, Query, Response
 from typing import Optional
-import httpx
+from sqlalchemy.orm import Session
 
 from data_loader import search_workout
+from auth import get_current_user
+from database.db_engine import get_db
+from database.db_models import DBWorkout
 from models import APIResponse
-from exercise_api import search_by_name, search_by_body_part, get_exercise_detail, get_all_body_parts, fetch_exercise_gif, get_all_exercises_gif, HEADERS, BASE_URL
+from exercise_api import search_by_name, search_by_body_part, get_exercise_detail, get_all_body_parts, fetch_exercise_gif, get_all_exercises_gif
 
 router = APIRouter()
 
 
-@router.get("")
+@router.get("", dependencies=[Depends(get_current_user)])
 async def get_all_workouts():
     """Ambil semua data workout. (Backward compatibility untuk ExerciseDB)"""
     results = await get_all_exercises_gif(limit=24)
@@ -23,7 +25,7 @@ async def get_all_workouts():
     )
 
 
-@router.get("/search")
+@router.get("/search", dependencies=[Depends(get_current_user)])
 async def search_workouts(
     body_part: Optional[str] = Query(None, description="Contoh: Chest, Back, Legs"),
     muscle: Optional[str] = Query(None, description="Contoh: Upper Chest, Hamstring"),
@@ -39,43 +41,30 @@ async def search_workouts(
 
 
 @router.get("/body-parts")
-async def get_body_parts():
+async def get_body_parts(db: Session = Depends(get_db)):
     """Daftar unique body parts yang tersedia."""
-    if ds.workout is None or ds.workout.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
-
-    col = next((c for c in ds.workout.columns if "body" in c.lower() or "part" in c.lower()), None)
-    if not col:
-        return APIResponse(success=False, message="Kolom body part tidak ditemukan")
-
-    parts = ds.workout[col].dropna().unique().tolist()
+    parts = [part for (part,) in db.query(DBWorkout.body_part).filter(DBWorkout.body_part.isnot(None)).distinct().all()]
     return APIResponse(success=True, data=parts, total=len(parts))
 
 
 @router.get("/muscles")
-async def get_muscle_types():
+async def get_muscle_types(db: Session = Depends(get_db)):
     """Daftar unique muscle types yang tersedia."""
-    if ds.workout is None or ds.workout.empty:
-        return APIResponse(success=False, message="Dataset tidak tersedia")
-
-    col = next((c for c in ds.workout.columns if "muscle" in c.lower()), None)
-    if not col:
-        return APIResponse(success=False, message="Kolom muscle tidak ditemukan")
-
-    muscles = ds.workout[col].dropna().unique().tolist()
+    muscles = [muscle for (muscle,) in db.query(DBWorkout.type_of_muscle).filter(DBWorkout.type_of_muscle.isnot(None)).distinct().all()]
     return APIResponse(success=True, data=muscles, total=len(muscles))
 
 
 @router.get("/generate-split")
 async def generate_weekly_split(
     days: int = Query(3, ge=1, le=6, description="Hari latihan per minggu"),
-    body_parts: Optional[str] = Query(None, description="Comma-separated: Chest,Back,Legs")
+    body_parts: Optional[str] = Query(None, description="Comma-separated: Chest,Back,Legs"),
+    db: Session = Depends(get_db),
 ):
     """
     Generate weekly workout split berdasarkan jumlah hari.
     Logic: 1=Full Body, 2=Upper/Lower, 3=PPL, 4=Upper/Lower x2, 5-6=Body Part Split
     """
-    if ds.workout is None or ds.workout.empty:
+    if db.query(DBWorkout.id).first() is None:
         return APIResponse(success=False, message="Dataset tidak tersedia")
 
     # Mapping days → split
@@ -120,7 +109,7 @@ async def generate_weekly_split(
 # ExerciseDB Endpoints (Animasi GIF gerakan)
 # ==============================================================
 
-@router.get("/gif/search")
+@router.get("/gif/search", dependencies=[Depends(get_current_user)])
 async def search_exercise_gif(
     q: str = Query(..., description="Nama gerakan, contoh: push up, squat, curl")
 ):
@@ -134,9 +123,9 @@ async def search_exercise_gif(
     return APIResponse(success=True, data=results, total=len(results))
 
 
-@router.get("/gif/all")
+@router.get("/gif/all", dependencies=[Depends(get_current_user)])
 async def get_all_exercise_gifs(
-    limit: int = Query(24, description="Batas jumlah data yang dikembalikan")
+    limit: int = Query(24, ge=1, le=100, description="Batas jumlah data yang dikembalikan")
 ):
     """
     Ambil semua latihan dari ExerciseDB.
@@ -148,7 +137,7 @@ async def get_all_exercise_gifs(
     return APIResponse(success=True, data=results, total=len(results))
 
 
-@router.get("/gif/body-part")
+@router.get("/gif/body-part", dependencies=[Depends(get_current_user)])
 async def search_exercise_gif_by_body_part(
     body_part: str = Query(..., description="Body part, contoh: chest, back, legs, shoulders")
 ):
@@ -162,7 +151,7 @@ async def search_exercise_gif_by_body_part(
     return APIResponse(success=True, data=results, total=len(results))
 
 
-@router.get("/gif/detail/{exercise_id}")
+@router.get("/gif/detail/{exercise_id}", dependencies=[Depends(get_current_user)])
 async def get_exercise_gif_detail(exercise_id: str):
     """
     Ambil detail lengkap satu gerakan beserta instruksi step-by-step.
@@ -173,7 +162,7 @@ async def get_exercise_gif_detail(exercise_id: str):
     return APIResponse(success=True, data=result)
 
 
-@router.get("/gif/body-parts")
+@router.get("/gif/body-parts", dependencies=[Depends(get_current_user)])
 async def list_gif_body_parts():
     """Daftar semua body part yang tersedia di ExerciseDB."""
     parts = await get_all_body_parts()

@@ -1,12 +1,8 @@
-import os
 import logging
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from config import CHROMA_PERSIST_DIR
 
 logger = logging.getLogger(__name__)
-
-# Constants
-CHROMA_PERSIST_DIR = os.path.join(os.path.dirname(__file__), "chroma_db")
 
 # Global variables to hold vector stores
 workout_vectorstore = None
@@ -16,7 +12,7 @@ embeddings = None
 def init_vector_stores():
     global workout_vectorstore, nutrition_vectorstore, embeddings
     
-    logger.info("🔄 Initializing Vector Stores (ChromaDB) with Gemini...")
+    logger.info("Initializing local ChromaDB vector stores...")
     
     from langchain_huggingface import HuggingFaceEmbeddings
     embeddings = HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
@@ -33,7 +29,7 @@ def init_vector_stores():
         persist_directory=CHROMA_PERSIST_DIR
     )
     
-    logger.info("✅ Vector Stores dihubungkan dengan Gemini (Mode Baca-Saja).")
+    logger.info("Local ChromaDB vector stores are ready.")
 
 def get_workout_retriever(k=5):
     if workout_vectorstore:

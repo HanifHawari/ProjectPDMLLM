@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import Sidebar from '../components/Sidebar'
 import { WorkoutPlanCard, MealPlanCard } from '../components/PlanCard'
 import api from '../api'
@@ -85,7 +85,7 @@ export default function PlanGeneratorPage({ user }) {
             <button key={t.key} onClick={() => { setTab(t.key); setPlan(null); }}
               style={{
                 padding: '9px 18px', background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 14, fontWeight: 500, fontFamily: 'Inter, sans-serif',
+                fontSize: 14, fontWeight: 500, fontFamily: '"Fira Sans", Arial, sans-serif',
                 color: tab === t.key ? '#22c55e' : '#a3a3a3',
                 borderBottom: tab === t.key ? '2px solid #22c55e' : '2px solid transparent',
                 marginBottom: -1, transition: 'all 0.2s',
@@ -237,11 +237,11 @@ const labelStyle = {
 const optionBtnStyle = {
   padding: '10px 12px', borderRadius: 8, border: '1px solid #2a2a2a',
   cursor: 'pointer', textAlign: 'left', transition: 'all 0.15s',
-  fontFamily: 'Inter, sans-serif', color: '#f5f5f5',
+  fontFamily: '"Fira Sans", Arial, sans-serif', color: '#f5f5f5',
 }
 
 const dayBtnStyle = {
   width: 40, height: 40, borderRadius: 8, border: '1px solid #2a2a2a',
   cursor: 'pointer', fontSize: 15, fontWeight: 600,
-  fontFamily: 'Inter, sans-serif', transition: 'all 0.15s',
+  fontFamily: '"Fira Sans", Arial, sans-serif', transition: 'all 0.15s',
 }

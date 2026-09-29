@@ -1,500 +1,362 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import '../components/buttons.css'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
+import './LandingPage.css'
+
+const navItems = [
+  { label: 'Manfaat', href: '#manfaat' },
+  { label: 'Fitur', href: '#fitur' },
+  { label: 'AI Chat', href: '#ai-chat' },
+  { label: 'FAQ', href: '#faq' },
+]
+
+const problems = [
+  {
+    title: 'Bingung memilih latihan',
+    solution: 'Buat rencana latihan berdasarkan tujuan, level, jumlah hari, dan peralatanmu.',
+  },
+  {
+    title: 'Sulit mengatur makanan',
+    solution: 'Cari makanan, gunakan filter alergen, dan susun meal plan dari satu tempat.',
+  },
+  {
+    title: 'Informasi tersebar',
+    solution: 'Akses AI Chat, kalkulator kebugaran, workout, dan nutrisi melalui satu aplikasi.',
+  },
+]
 
 const features = [
   {
-    title: 'AI Personal Trainer',
-    desc: 'Dapatkan rencana latihan yang dibuat khusus untukmu oleh AI berdasarkan tujuan, level, dan peralatanmu.',
-    color: '#22c55e',
+    title: 'AI Chat',
+    description: 'Tanyakan hal seputar latihan, nutrisi, dan kebugaran. Kamu juga dapat membuka kembali riwayat percakapan.',
+    to: '/chat',
+    image: '/foto6.jpg',
   },
   {
-    title: 'Nutrisi Cerdas',
-    desc: 'Temukan makanan, hitung kalori, dan dapatkan meal plan yang disesuaikan dengan preferensi dan alergimu.',
-    color: '#ef4444',
+    title: 'AI Plan',
+    description: 'Buat rencana workout atau meal plan dengan pilihan tujuan, tingkat pengalaman, peralatan, dan preferensi makan.',
+    to: '/plan',
+    image: '/foto7.jpg',
   },
   {
-    title: 'Tracking Kebugaran',
-    desc: 'Pantau BMI, zona detak jantung, dan estimasi kalori harian secara real-time dari dashboard kamu.',
-    color: '#22c55e',
+    title: 'Nutrisi & Alergen',
+    description: 'Cari informasi makanan, jelajahi makanan sehat, dan saring hasil berdasarkan pantangan tertentu.',
+    to: '/nutrition',
+    image: '/foto9.jpg',
+  },
+  {
+    title: 'Workout',
+    description: 'Temukan gerakan berdasarkan nama atau bagian tubuh, lalu jelajahi daftar program menurut level.',
+    to: '/workout',
+    image: '/foto8.jpg',
+  },
+  {
+    title: 'Smart Tools',
+    description: 'Gunakan kalkulator BMI, estimasi kalori latihan, dan analisis zona detak jantung di dashboard.',
+    to: '/dashboard',
+    image: '/foto10.jpg',
   },
 ]
 
-const stats = [
-  { value: 35, suffix: 'K+', label: 'Data Nutrisi' },
-  { value: 2500, suffix: '+', label: 'Program Latihan' },
-  { value: 24, suffix: '/7', label: 'AI Siap Membantu' },
-  { value: 100, suffix: '%', label: 'Dipersonalisasi' },
+const highlights = [
+  { image: '/foto1.jpg', to: '/workout', label: 'Jelajahi Workout' },
+  { image: '/foto2.jpg', to: '/plan', label: 'Buat AI Plan' },
+  { image: '/foto4.jpg', to: '/chat', label: 'Buka AI Chat' },
 ]
 
-const steps = [
-  { step: '01', title: 'Daftar Tanpa Ribet', desc: 'Cukup masukkan username pilihanmu. Tidak perlu email atau password.' },
-  { step: '02', title: 'Personalisasi Profil', desc: 'Ceritakan sedikit tentang dirimu: tinggi, berat, dan tujuan fitness (Turun BB / Bentuk Otot).' },
-  { step: '03', title: 'Terima Rencana AI', desc: 'AI akan langsung menyusun program latihan harian dan menu nutrisi khusus untukmu.' },
+const gallery = [
+  { image: '/foto3.jpg', title: 'Mulai bergerak', to: '/workout' },
+  { image: '/foto5.jpg', title: 'Tentukan tujuan', to: '/plan' },
+  { image: '/foto11.jpg', title: 'Bangun kebiasaan', to: '/dashboard' },
+  { image: '/foto12.jpg', title: 'Terus berkembang', to: '/workout' },
+  { image: '/foto13.jpg', title: 'Temukan ritmemu', to: '/workout' },
 ]
 
-const userReviews = [
-  { name: 'Andi S.', rating: 5, comment: 'Sangat terbantu dengan AI Personal Trainer. Latihan jadi lebih terstruktur!' },
-  { name: 'Budi W.', rating: 5, comment: 'Nutrisi cerdas dari FitMindAI bikin diet nggak tersiksa lagi. Mantap!' },
-  { name: 'Citra K.', rating: 4, comment: 'Tracking kebugaran yang real-time sangat memotivasi saya setiap hari.' },
-  { name: 'Diana P.', rating: 5, comment: 'Platform AI terbaik untuk fitness yang pernah saya coba. Sangat responsif.' },
-  { name: 'Eko R.', rating: 5, comment: 'Rekomendasi latihannya sangat pas dengan alat gym yang saya punya.' },
+const questions = [
+  {
+    question: 'Apakah saya memerlukan email untuk mendaftar?',
+    answer: 'Tidak. Form pendaftaran saat ini meminta username, nomor WhatsApp, dan password.',
+  },
+  {
+    question: 'Apakah rencana latihan langsung dibuat setelah daftar?',
+    answer: 'Setelah masuk, buka AI Plan dan pilih tujuan, level, hari latihan, serta peralatan. Rencana dibuat ketika kamu menekan tombol Generate.',
+  },
+  {
+    question: 'Bisakah saya mencari makanan sesuai pantangan?',
+    answer: 'Pencarian makanan menyediakan filter untuk gluten, susu, kacang, kedelai, telur, dan ikan. Tetap periksa informasi produk sebelum dikonsumsi.',
+  },
+  {
+    question: 'Apa saja yang ada di dashboard?',
+    answer: 'Dashboard menyediakan kalkulator BMI, estimasi kalori latihan, dan analisis zona detak jantung. Masukkan data yang diminta untuk melihat hasilnya.',
+  },
 ]
+
+const iconPaths = {
+  arrow: <><path d="M5 12h14" /><path d="m13 6 6 6-6 6" /></>,
+  check: <><path d="m5 12 4 4L19 6" /></>,
+  chat: <><path d="M20 11.5a7.5 7.5 0 0 1-7.5 7.5H6l-3 2v-6.5A7.5 7.5 0 1 1 20 11.5Z" /><path d="M8 11h8M8 14h5" /></>,
+  menu: <><path d="M4 7h16M4 12h16M4 17h16" /></>,
+  close: <><path d="M5 5l14 14M19 5 5 19" /></>,
+}
+
+function Icon({ name, size = 22 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      {iconPaths[name]}
+    </svg>
+  )
+}
+function SectionHeading({ title, description }) {
+  return (
+    <div className="landing-section-heading landing-reveal" data-reveal>
+      <h2>{title}</h2>
+      {description && <p>{description}</p>}
+    </div>
+  )
+}
 
 export default function LandingPage() {
-  const navigate = useNavigate()
-
-  return (
-    <div style={{ background: '#0a0a0a', color: '#f5f5f5', fontFamily: "'Inter', system-ui, sans-serif", overflowX: 'hidden' }}>
-
-      {/* ── HERO SECTION ─────────────────────────────────── */}
-      <section style={{ position: 'relative', minHeight: '100vh', display: 'flex', flexDirection: 'column', justifyContent: 'center', alignItems: 'flex-start', overflow: 'hidden' }}>
-
-        {/* Background video */}
-        <video
-          autoPlay
-          loop
-          muted
-          playsInline
-          preload="auto"
-          style={{
-            position: 'absolute', inset: 0,
-            width: '100%', height: '100%', objectFit: 'cover',
-            zIndex: 0,
-          }}
-        >
-          <source src="/gym_bg.mp4" type="video/mp4" />
-        </video>
-
-        {/* Darkening overlay (mengganti filter: brightness untuk performa lebih baik) */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          backgroundColor: 'rgba(0,0,0,0.55)',
-          zIndex: 1,
-        }} />
-
-        {/* Color overlay */}
-        <div style={{
-          position: 'absolute', inset: 0,
-          background: 'linear-gradient(120deg, rgba(0,0,0,0.85) 0%, rgba(10,10,10,0.6) 50%, rgba(34,197,94,0.08) 100%)',
-          zIndex: 1,
-        }} />
-
-        {/* Green bottom gradient */}
-        <div style={{
-          position: 'absolute', bottom: 0, left: 0, right: 0, height: 3,
-          background: 'linear-gradient(90deg, transparent, #22c55e, transparent)',
-          zIndex: 2,
-        }} />
-
-        {/* Navbar */}
-        <nav className="nav-container" style={{
-          position: 'absolute', top: 0, left: 0, right: 0,
-          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-          zIndex: 10,
-        }}>
-          <div style={{ fontSize: 22, fontWeight: 700, letterSpacing: '-0.02em' }}>
-            FitMind<span style={{ color: '#22c55e' }}>AI</span>
-          </div>
-          <div style={{ display: 'flex', gap: 12 }}>
-            <button onClick={() => navigate('/login')}
-              style={{
-                background: 'none', border: '1px solid rgba(255,255,255,0.2)',
-                color: '#f5f5f5', padding: '9px 22px', borderRadius: 8,
-                cursor: 'pointer', fontSize: 14, fontWeight: 500, fontFamily: 'inherit',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = '#22c55e'; e.currentTarget.style.color = '#22c55e' }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.2)'; e.currentTarget.style.color = '#f5f5f5' }}
-            >
-              Masuk
-            </button>
-            <button onClick={() => navigate('/register')} className="btn-charger">
-              Daftar Gratis
-            </button>
-          </div>
-        </nav>
-
-        {/* Hero content */}
-        <div className="section-px" style={{ position: 'relative', zIndex: 5, maxWidth: 760 }}>
-          <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 20, fontWeight: 600 }}>
-            Platform Kebugaran Berbasis AI
-          </div>
-          <h1 style={{
-            fontSize: 'clamp(42px, 6vw, 80px)', fontWeight: 800,
-            lineHeight: 1.05, letterSpacing: '-0.04em', marginBottom: 24,
-          }}>
-            Latihan Lebih
-            <span style={{
-              display: 'block',
-              background: 'linear-gradient(90deg, #22c55e, #16a34a)',
-              WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent',
-            }}>
-              Cerdas Bersama AI
-            </span>
-          </h1>
-          <p style={{ fontSize: 18, color: '#a3a3a3', maxWidth: 540, lineHeight: 1.7, marginBottom: 40 }}>
-            Program latihan personal, nutrisi tepat sasaran, dan pendampingan AI aktif 24 jam. Capai tubuh impianmu lebih cepat.
-          </p>
-          <div className="hero-buttons" style={{ display: 'flex', gap: 14, flexWrap: 'wrap' }}>
-            <button onClick={() => navigate('/register')} className="btn-charger btn-charger-large">
-              Mulai Sekarang
-            </button>
-            <button onClick={() => document.getElementById('fitur').scrollIntoView({ behavior: 'smooth' })}
-              style={{
-                background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.15)',
-                color: '#f5f5f5', padding: '14px 36px', borderRadius: 10,
-                cursor: 'pointer', fontSize: 16, fontWeight: 500, fontFamily: 'inherit',
-                backdropFilter: 'blur(8px)',
-                transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => e.currentTarget.style.background = 'rgba(255,255,255,0.12)'}
-              onMouseLeave={e => e.currentTarget.style.background = 'rgba(255,255,255,0.07)'}
-            >
-              Pelajari Fitur
-            </button>
-          </div>
-        </div>
-
-        {/* Scroll indicator */}
-        <div style={{
-          position: 'absolute', bottom: 36, left: '50%', transform: 'translateX(-50%)',
-          display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
-          zIndex: 5, animation: 'bounce 2s infinite',
-        }}>
-          <div style={{ width: 1, height: 48, background: 'linear-gradient(to bottom, transparent, #22c55e)' }} />
-          <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#22c55e' }} />
-        </div>
-      </section>
-
-      {/* ── STATS (Desktop only) ───────────────────────────── */}
-      <section className="section-px py-12 stats-section" style={{
-        background: '#111111',
-        borderTop: '1px solid #1e1e1e',
-        borderBottom: '1px solid #1e1e1e',
-        display: 'flex',
-        justifyContent: 'space-around',
-        flexWrap: 'wrap',
-        gap: 24,
-      }}>
-        {stats.map((s, i) => (
-          <AnimatedStat key={i} {...s} />
-        ))}
-      </section>
-
-      {/* ── FEATURES ──────────────────────────────────────── */}
-      <section id="fitur" className="section-px py-24" style={{ maxWidth: 1100, margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
-            Fitur Unggulan
-          </div>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            Satu Platform, Semua
-            <span style={{ color: '#22c55e' }}> yang Kamu Butuhkan</span>
-          </h2>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: 20 }}>
-          {features.map((f, i) => (
-            <FeatureCard key={i} {...f} />
-          ))}
-        </div>
-      </section>
-
-      {/* ── HOW IT WORKS ──────────────────────────────────── */}
-      <section className="section-px py-24" style={{ background: '#0a0a0a', borderTop: '1px solid #1e1e1e' }}>
-        <div style={{ textAlign: 'center', marginBottom: 64 }}>
-          <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
-            Proses Sederhana
-          </div>
-          <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-            Cara Kerja <span style={{ color: '#22c55e' }}>FitMind AI</span>
-          </h2>
-        </div>
-        <div style={{
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: 40,
-          maxWidth: 1000, margin: '0 auto', position: 'relative'
-        }}>
-          {steps.map((s, i) => (
-            <div key={i} style={{ textAlign: 'center', position: 'relative', zIndex: 2 }}>
-              <div style={{
-                width: 64, height: 64, borderRadius: '50%', background: '#111', border: '1px solid #22c55e',
-                display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 24px',
-                fontSize: 24, fontWeight: 800, color: '#22c55e', boxShadow: '0 0 20px rgba(34,197,94,0.15)'
-              }}>
-                {s.step}
-              </div>
-              <h3 style={{ fontSize: 20, fontWeight: 700, marginBottom: 12 }}>{s.title}</h3>
-              <p style={{ fontSize: 15, color: '#a3a3a3', lineHeight: 1.6 }}>{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </section>
-
-      {/* ── USER REVIEWS ──────────────────────────────────── */}
-      <ReviewSection />
-
-      {/* ── CTA SECTION ───────────────────────────────────── */}
-      <section className="section-px py-24" style={{
-        background: 'linear-gradient(135deg, #111 0%, #0a1a10 50%, #111 100%)',
-        borderTop: '1px solid #1e1e1e',
-        borderBottom: '1px solid #1e1e1e',
-        textAlign: 'center',
-      }}>
-        <div style={{
-          display: 'inline-block',
-          padding: '4px 14px', borderRadius: 20,
-          background: 'rgba(34,197,94,0.1)',
-          border: '1px solid rgba(34,197,94,0.25)',
-          fontSize: 12, color: '#22c55e',
-          textTransform: 'uppercase', letterSpacing: '0.12em',
-          marginBottom: 24, fontWeight: 600,
-        }}>
-          Gratis Selamanya
-        </div>
-        <h2 style={{ fontSize: 'clamp(28px, 4vw, 52px)', fontWeight: 800, letterSpacing: '-0.03em', marginBottom: 16 }}>
-          Siap Mulai Transformasimu?
-        </h2>
-        <p style={{ fontSize: 17, color: '#a3a3a3', marginBottom: 40, maxWidth: 480, margin: '0 auto 40px' }}>
-          Daftar dengan username pilihanmu. Tidak perlu email atau password, mulai dalam 10 detik.
-        </p>
-        <button onClick={() => navigate('/register')} className="btn-charger btn-charger-xl">
-          Daftar Sekarang
-        </button>
-      </section>
-
-      {/* ── FOOTER ────────────────────────────────────────── */}
-      <footer className="section-px py-8" style={{ background: '#0a0a0a', borderTop: '1px solid #1a1a1a', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
-        <div style={{ fontSize: 18, fontWeight: 700 }}>
-          FitMind<span style={{ color: '#22c55e' }}>AI</span>
-        </div>
-        <div style={{ fontSize: 12, color: '#525252' }}>
-          Platform Kebugaran dan Nutrisi Berbasis Kecerdasan Buatan
-        </div>
-      </footer>
-
-      {/* ── FLOATING CHAT BUTTON ──────────────────────────── */}
-      <button
-        onClick={() => navigate('/chat')}
-        title="Mulai Chat dengan AI"
-        className="floating-chat-btn"
-      >
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path d="M21 15C21 15.5304 20.7893 16.0391 20.4142 16.4142C20.0391 16.7893 19.5304 17 19 17H7L3 21V5C3 4.46957 3.21071 3.96086 3.58579 3.58579C3.96086 3.21071 4.46957 3 5 3H19C19.5304 3 20.0391 3.21071 20.4142 3.58579C20.7893 3.96086 21 4.46957 21 5V15Z" stroke="#000" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-        </svg>
-      </button>
-
-      <style>{`
-        .nav-container { padding: 24px 60px; }
-        .section-px { padding-left: 60px; padding-right: 60px; }
-        .py-12 { padding-top: 48px; padding-bottom: 48px; }
-        .py-24 { padding-top: 100px; padding-bottom: 100px; }
-        .py-8 { padding-top: 36px; padding-bottom: 36px; }
-
-        /* ── Animated Floating Chat Button ── */
-        .floating-chat-btn {
-          position: fixed; bottom: 32px; right: 32px; z-index: 999;
-          width: 58px; height: 58px; border-radius: 50%;
-          background: #22c55e; border: none;
-          display: flex; align-items: center; justify-content: center;
-          cursor: pointer;
-          box-shadow: 0 0 0 0 rgba(34,197,94,0.5);
-          animation: chat-pulse 2.5s infinite;
-          transition: transform 0.2s ease, background 0.2s ease;
-        }
-        .floating-chat-btn:hover {
-          background: #16a34a;
-          transform: scale(1.12);
-          animation: none;
-          box-shadow: 0 0 36px rgba(34,197,94,0.8);
-        }
-        @keyframes chat-pulse {
-          0%   { box-shadow: 0 0 0 0 rgba(34,197,94,0.6); transform: scale(1); }
-          50%  { box-shadow: 0 0 0 14px rgba(34,197,94,0); transform: scale(1.05); }
-          100% { box-shadow: 0 0 0 0 rgba(34,197,94,0); transform: scale(1); }
-        }
-
-        @media (max-width: 768px) {
-          .nav-container { padding: 16px 20px; }
-          .section-px { padding-left: 20px; padding-right: 20px; }
-          .py-12 { padding-top: 32px; padding-bottom: 32px; }
-          .py-24 { padding-top: 60px; padding-bottom: 60px; }
-          .py-8 { padding-top: 24px; padding-bottom: 24px; }
-
-          /* Sembunyikan stats di mobile */
-          .stats-section { display: none !important; }
-
-          /* Navbar responsif */
-          .nav-container button { padding: 6px 14px !important; font-size: 13px !important; }
-          .nav-container > div:first-child { font-size: 20px !important; }
-          
-          /* Button CTA responsif */
-          .btn-charger-xl { width: 100%; display: block; box-sizing: border-box; text-align: center; }
-
-          /* Button hero responsif */
-          .hero-buttons { flex-direction: column; }
-          .hero-buttons button { width: 100%; text-align: center; justify-content: center; }
-
-          /* Floating chat button mobile */
-          .floating-chat-btn { bottom: 20px; right: 20px; width: 52px; height: 52px; }
-        }
-
-        @keyframes bounce {
-          0%, 100% { transform: translateX(-50%) translateY(0); }
-          50% { transform: translateX(-50%) translateY(8px); }
-        }
-      `}</style>
-    </div>
-  )
-}
-
-function FeatureCard({ title, desc, color }) {
-  return (
-    <div
-      style={{
-        background: '#111111',
-        border: '1px solid #1e1e1e',
-        borderRadius: 16, padding: 32,
-        transition: 'all 0.3s',
-        cursor: 'default',
-      }}
-      onMouseEnter={e => {
-        e.currentTarget.style.borderColor = color
-        e.currentTarget.style.transform = 'translateY(-4px)'
-        e.currentTarget.style.boxShadow = `0 12px 40px ${color}18`
-      }}
-      onMouseLeave={e => {
-        e.currentTarget.style.borderColor = '#1e1e1e'
-        e.currentTarget.style.transform = 'translateY(0)'
-        e.currentTarget.style.boxShadow = 'none'
-      }}
-    >
-      <div style={{ width: 3, height: 28, background: color, borderRadius: 2, marginBottom: 20 }} />
-      <div style={{ fontSize: 18, fontWeight: 700, marginBottom: 12, letterSpacing: '-0.01em' }}>{title}</div>
-      <div style={{ fontSize: 14, color: '#525252', lineHeight: 1.65 }}>{desc}</div>
-    </div>
-  )
-}
-
-function ReviewSection() {
-  const [activeIndex, setActiveIndex] = useState(0)
+  const [menuOpen, setMenuOpen] = useState(false)
+  const pageRef = useRef(null)
 
   useEffect(() => {
-    const timer = setInterval(() => {
-      setActiveIndex((current) => (current + 1) % userReviews.length)
-    }, 2000)
-    return () => clearInterval(timer)
+    const page = pageRef.current
+    if (!page || !('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const observer = new IntersectionObserver((entries, activeObserver) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('is-visible')
+          activeObserver.unobserve(entry.target)
+        }
+      })
+    }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' })
+
+    page.classList.add('has-scroll-animations')
+    page.querySelectorAll('[data-reveal]').forEach(element => observer.observe(element))
+
+    return () => {
+      observer.disconnect()
+      page.classList.remove('has-scroll-animations')
+    }
+  }, [])
+
+  useEffect(() => {
+    const videos = pageRef.current?.querySelectorAll('[data-play-on-view]')
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      pageRef.current?.querySelectorAll('video').forEach(item => item.pause())
+      return
+    }
+    if (!videos?.length) return
+
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) entry.target.play().catch(() => {})
+        else entry.target.pause()
+      })
+    }, { rootMargin: '120px 0px' })
+
+    videos.forEach(video => observer.observe(video))
+    return () => {
+      observer.disconnect()
+      videos.forEach(video => video.pause())
+    }
   }, [])
 
   return (
-    <section className="section-px py-24" style={{ background: '#111111', borderTop: '1px solid #1e1e1e', overflow: 'hidden' }}>
-      <div style={{ textAlign: 'center', marginBottom: 64 }}>
-        <div style={{ fontSize: 12, letterSpacing: '0.18em', color: '#22c55e', textTransform: 'uppercase', marginBottom: 14, fontWeight: 600 }}>
-          Ulasan Pengguna
-        </div>
-        <h2 style={{ fontSize: 'clamp(28px, 4vw, 48px)', fontWeight: 800, letterSpacing: '-0.03em', lineHeight: 1.1 }}>
-          Apa Kata <span style={{ color: '#22c55e' }}>Mereka</span>
-        </h2>
-      </div>
-      
-      <div style={{ maxWidth: 800, margin: '0 auto', position: 'relative', height: 260 }}>
-        {userReviews.map((review, i) => (
-          <div key={i} style={{
-            position: 'absolute',
-            top: 0,
-            left: 0,
-            width: '100%',
-            opacity: activeIndex === i ? 1 : 0,
-            transform: activeIndex === i ? 'translateX(0)' : (i < activeIndex ? 'translateX(-50px)' : 'translateX(50px)'),
-            transition: 'all 0.5s ease-in-out',
-            textAlign: 'center',
-            pointerEvents: activeIndex === i ? 'auto' : 'none',
-            background: '#1a1a1a',
-            border: '1px solid #2a2a2a',
-            borderRadius: 16,
-            padding: '40px 24px',
-            boxSizing: 'border-box'
-          }}>
-            <div style={{ fontSize: 24, color: '#fbbf24', marginBottom: 16 }}>
-              {'★'.repeat(review.rating)}{'☆'.repeat(5 - review.rating)}
+    <div className="landing-page" ref={pageRef}>
+      <header className="landing-header">
+        <div className="landing-shell landing-header-inner">
+          <Link className="landing-brand" to="/" aria-label="FitMindAI, beranda">
+            FitMind<span>AI</span>
+          </Link>
+
+          <nav id="landing-navigation" className={'landing-nav' + (menuOpen ? ' is-open' : '')} aria-label="Navigasi landing page">
+            {navItems.map(item => (
+              <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>
+            ))}
+            <div className="landing-mobile-actions">
+              <Link to="/login">Masuk</Link>
+              <Link to="/register" className="landing-button landing-button-primary">Daftar Gratis</Link>
             </div>
-            <p style={{ fontSize: 20, fontStyle: 'italic', color: '#f5f5f5', marginBottom: 24, lineHeight: 1.5 }}>
-              "{review.comment}"
-            </p>
-            <div style={{ fontSize: 16, fontWeight: 700, color: '#22c55e' }}>
-              - {review.name}
+          </nav>
+
+          <div className="landing-header-actions">
+            <Link className="landing-login-link" to="/login">Masuk</Link>
+            <Link className="landing-button landing-button-primary" to="/register">Daftar Gratis</Link>
+          </div>
+          <button
+            className="landing-menu-button"
+            type="button"
+            aria-label={menuOpen ? 'Tutup menu' : 'Buka menu'}
+            aria-controls="landing-navigation"
+            aria-expanded={menuOpen}
+            onClick={() => setMenuOpen(open => !open)}
+          >
+            <Icon name={menuOpen ? 'close' : 'menu'} />
+          </button>
+        </div>
+      </header>
+
+      <main>
+        <section className="landing-hero">
+          <div className="landing-hero-videos" aria-hidden="true">
+            <video src="/vid2.mp4" autoPlay loop muted playsInline preload="metadata" />
+            <video src="/vid3.mp4" autoPlay loop muted playsInline preload="metadata" />
+            <video src="/vid4.mp4" autoPlay loop muted playsInline preload="metadata" />
+          </div>
+          <div className="landing-shell landing-hero-grid">
+            <div className="landing-hero-copy">
+              <h1>GO FURTHER IN LIFE<br />LATIH LEBIH <span>CERDAS</span><br />BERSAMA AI</h1>
+              <p>Program latihan terukur, perencanaan nutrisi spesifik bebas alergen, dan asisten sains olahraga.</p>
+              <div className="landing-hero-actions">
+                <Link className="landing-button landing-button-primary landing-button-large" to="/register">
+                  Daftar Sekarang
+                </Link>
+                <a className="landing-button landing-button-secondary landing-button-large" href="#fitur">Pelajari Fitur</a>
+              </div>
             </div>
           </div>
-        ))}
-      </div>
-    </section>
-  )
-}
+        </section>
 
-function AnimatedStat({ value, suffix, label }) {
-  const [count, setCount] = useState(0)
-  const [isVisible, setIsVisible] = useState(false)
+        <section className="landing-highlights" aria-label="Jelajahi FitMindAI">
+          <div className="landing-shell landing-highlight-grid" data-reveal>
+            {highlights.map((item, index) => (
+              <Link className={'landing-highlight-card landing-highlight-card-' + (index + 1)} key={item.to} to={item.to} aria-label={item.label}>
+                <img className="landing-highlight-media" src={item.image} alt="" loading="lazy" />
+              </Link>
+            ))}
+          </div>
+        </section>
 
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsVisible(true)
-          observer.disconnect()
-        }
-      },
-      { threshold: 0.1 }
-    )
-    
-    // Create a safe ID from the label
-    const safeId = `stat-${label.replace(/\s+/g, '-').toLowerCase()}`
-    const element = document.getElementById(safeId)
-    if (element) observer.observe(element)
-    
-    return () => observer.disconnect()
-  }, [label])
+        <section id="manfaat" className="landing-section landing-section-alt">
+          <div className="landing-shell landing-benefit-grid">
+            <div className="landing-benefit-copy landing-reveal" data-reveal>
+              <h2>Hentikan latihan tanpa arah dan <span>Mulai dengan rencana yang jelas</span></h2>
+              <p className="landing-benefit-intro">FitMindAI membantu menghubungkan pilihan latihan, nutrisi, dan informasi kebugaran dalam satu alur.</p>
+              <div className="landing-benefit-list landing-cascade" data-reveal>
+                {problems.map(problem => (
+                  <article className="landing-benefit-item" key={problem.title}>
+                    <span className="landing-benefit-check"><Icon name="check" size={19} /></span>
+                    <div>
+                      <h3>{problem.title}</h3>
+                      <p>{problem.solution}</p>
+                    </div>
+                  </article>
+                ))}
+              </div>
+              <a className="landing-button landing-button-primary" href="#fitur">Jelajahi fitur</a>
+            </div>
+            <div className="landing-benefit-photo landing-reveal" data-reveal>
+              <video src="/vid1.mp4" poster="/foto3.jpg" muted loop playsInline preload="none" aria-hidden="true" data-play-on-view />
+            </div>
+          </div>
+        </section>
 
-  useEffect(() => {
-    if (!isVisible) return
+        <section id="fitur" className="landing-section">
+          <div className="landing-shell">
+            <SectionHeading
+              title="SEMUA KEBUTUHAN KEBUGARANMU DALAM SATU PLATFORM"
+              description="Pilih fitur yang kamu perlukan, dari mencari gerakan hingga membuat rencana latihan dan makan."
+            />
+            <div className="landing-marquee-outer" aria-label="Fitur FitMindAI">
+              <div className="landing-marquee-track">
+                {[...features, ...features].map((feature, i) => (
+                  <Link className="landing-feature-card" to={feature.to} key={feature.title + i}>
+                    <img className="landing-feature-media" src={feature.image} alt="" loading="lazy" />
+                    <span className="landing-feature-shade" aria-hidden="true" />
+                    <span className="landing-feature-content">
+                      <h3>{feature.title}</h3>
+                      <p>{feature.description}</p>
+                    </span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </section>
 
-    let start = 0
-    const end = typeof value === 'number' ? value : parseInt(value.toString().replace(/,/g, ''))
-    if (isNaN(end)) {
-      setCount(value)
-      return
-    }
 
-    const duration = 2000
-    const incrementTime = 30
-    const totalSteps = duration / incrementTime
-    const step = end / totalSteps
 
-    const timer = setInterval(() => {
-      start += step
-      if (start >= end) {
-        setCount(end)
-        clearInterval(timer)
-      } else {
-        setCount(Math.floor(start))
-      }
-    }, incrementTime)
 
-    return () => clearInterval(timer)
-  }, [isVisible, value])
 
-  const displayValue = typeof count === 'number' && count >= 1000 
-    ? count.toLocaleString('en-US') 
-    : count
+        <section id="ai-chat" className="landing-section landing-chat-section">
+          <video className="landing-chat-video" src="/gym_bg.mp4" poster="/foto4.jpg" muted loop playsInline preload="none" aria-hidden="true" data-play-on-view />
+          <div className="landing-shell landing-chat-grid">
+            <div className="landing-chat-copy landing-reveal" data-reveal>
+              <h2>Ada pertanyaan tentang latihan atau nutrisi?</h2>
+              <p>Buka AI Chat untuk mengajukan pertanyaan. Percakapanmu tersimpan sehingga dapat dibaca kembali saat dibutuhkan.</p>
+              <Link className="landing-button landing-button-primary" to="/chat">Buka AI Chat</Link>
+            </div>
+            <div className="landing-chat-preview landing-reveal" data-reveal>
+              <div className="landing-chat-preview-header">
+                <span className="landing-chat-avatar"><Icon name="chat" size={20} /></span>
+                <div><strong>FitMindAI Chat</strong><small>Contoh topik yang bisa ditanyakan</small></div>
+              </div>
+              <div className="landing-chat-preview-body">
+                <p>Mulai dari pertanyaan yang paling dekat dengan rutinitasmu.</p>
+                <div className="landing-chat-suggestions">
+                  <span>Bagaimana memilih latihan untuk pemula?</span>
+                  <span>Apa informasi nutrisi makanan ini?</span>
+                  <span>Bagaimana menyusun jadwal latihan?</span>
+                </div>
+              </div>
+              <div className="landing-chat-preview-input">Tulis pertanyaanmu di AI Chat <Icon name="arrow" size={18} /></div>
+            </div>
+          </div>
+        </section>
 
-  const safeId = `stat-${label.replace(/\s+/g, '-').toLowerCase()}`
+        <section className="landing-section landing-gallery" aria-label="Inspirasi aktivitas">
+          <div className="landing-shell">
+            <SectionHeading
+              title="Temukan ritme yang cocok untukmu."
+              description="Pilih titik awalmu, susun rencana, lalu gunakan fitur yang kamu perlukan sepanjang perjalanan."
+            />
+            <div className="landing-gallery-grid landing-cascade" data-reveal>
+              {gallery.map(item => (
+                <Link className="landing-gallery-card" to={item.to} key={item.title}>
+                  <img src={item.image} alt="" loading="lazy" />
+                  <span>{item.title}</span>
+                </Link>
+              ))}
+            </div>
+          </div>
+        </section>
 
-  return (
-    <div id={safeId} style={{ textAlign: 'center' }}>
-      <div style={{ fontSize: 40, fontWeight: 800, letterSpacing: '-0.03em', color: '#ffffff' }}>
-        {displayValue}{suffix}
-      </div>
-      <div style={{ fontSize: 13, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 4 }}>
-        {label}
-      </div>
+        <section id="faq" className="landing-section landing-section-alt">
+          <div className="landing-shell">
+            <SectionHeading
+              title="Hal yang sering ditanyakan."
+              description="Kenali alur aplikasi sebelum memulai."
+            />
+            <div className="landing-faq-list landing-cascade" data-reveal>
+              {questions.map((item, index) => (
+                <details key={item.question} open={index === 0}>
+                  <summary>{item.question}<span aria-hidden="true">+</span></summary>
+                  <p>{item.answer}</p>
+                </details>
+              ))}
+            </div>
+          </div>
+        </section>
+
+      </main>
+
+      <footer className="landing-footer">
+        <div className="landing-shell landing-footer-grid landing-reveal" data-reveal>
+          <div>
+            <Link className="landing-brand" to="/">FitMind<span>AI</span></Link>
+            <p>Platform kebugaran berbasis AI untuk latihan, nutrisi, dan rencana yang lebih terarah.</p>
+          </div>
+          <div><h3>Jelajahi</h3><a href="#fitur">Fitur</a><a href="#personalisasi">Personalisasi</a></div>
+          <div><h3>Fitur aplikasi</h3><Link to="/plan">AI Plan</Link><Link to="/nutrition">Nutrisi</Link><Link to="/workout">Workout</Link></div>
+          <div><h3>Akun & bantuan</h3><Link to="/login">Masuk</Link><Link to="/register">Daftar</Link><a href="#faq">Pertanyaan Umum</a></div>
+        </div>
+        <div className="landing-shell landing-footer-bottom"><span>© {new Date().getFullYear()} FitMindAI</span><span>Dibuat untuk langkah yang lebih terarah.</span></div>
+      </footer>
+
+      <Link className="landing-floating-chat" to="/chat" aria-label="Buka AI Chat" title="Buka AI Chat">
+        <img src="/pp-ai.png" alt="" />
+      </Link>
     </div>
   )
 }

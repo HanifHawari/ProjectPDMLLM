@@ -19,7 +19,7 @@ const ExerciseSVG = {
       {/* Lantai */}
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
       {/* Label */}
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Push Position</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Push Position</text>
     </svg>
   ),
   Back: (
@@ -38,7 +38,7 @@ const ExerciseSVG = {
       <line x1="55" y1="55" x2="45" y2="80" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="55" y1="55" x2="68" y2="80" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Row Position</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Row Position</text>
     </svg>
   ),
   Legs: (
@@ -54,7 +54,7 @@ const ExerciseSVG = {
       <line x1="42" y1="68" x2="38" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="78" y1="68" x2="82" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Squat Position</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Squat Position</text>
     </svg>
   ),
   Arms: (
@@ -73,7 +73,7 @@ const ExerciseSVG = {
       <line x1="60" y1="58" x2="50" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="60" y1="58" x2="70" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Curl Position</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Curl Position</text>
     </svg>
   ),
   Shoulders: (
@@ -93,7 +93,7 @@ const ExerciseSVG = {
       <line x1="60" y1="58" x2="50" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="60" y1="58" x2="70" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Press Position</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Press Position</text>
     </svg>
   ),
   Abs: (
@@ -110,7 +110,7 @@ const ExerciseSVG = {
       <line x1="50" y1="55" x2="70" y2="68" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="70" y1="68" x2="82" y2="78" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Crunch Position</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Crunch Position</text>
     </svg>
   ),
   Bicep: (
@@ -127,7 +127,7 @@ const ExerciseSVG = {
       <line x1="60" y1="58" x2="50" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="60" y1="58" x2="70" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Bicep Curl</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Bicep Curl</text>
     </svg>
   ),
   Tricep: (
@@ -143,7 +143,7 @@ const ExerciseSVG = {
       <line x1="60" y1="58" x2="50" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="60" y1="58" x2="70" y2="82" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="82" x2="105" y2="82" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Tricep Extension</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Tricep Extension</text>
     </svg>
   ),
   Core: (
@@ -157,7 +157,7 @@ const ExerciseSVG = {
       <line x1="58" y1="52" x2="42" y2="68" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="58" y1="52" x2="76" y2="68" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="70" x2="105" y2="70" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="85" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Plank Position</text>
+      <text x="60" y="85" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Plank Position</text>
     </svg>
   ),
   default: (
@@ -169,7 +169,7 @@ const ExerciseSVG = {
       <line x1="60" y1="55" x2="48" y2="78" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="60" y1="55" x2="72" y2="78" stroke="#22c55e" strokeWidth="1.5" opacity="0.5"/>
       <line x1="15" y1="80" x2="105" y2="80" stroke="#2a2a2a" strokeWidth="1" strokeDasharray="4 3" opacity="0.6"/>
-      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="Inter, sans-serif">Exercise Position</text>
+      <text x="60" y="97" textAnchor="middle" fontSize="8" fill="#525252" fontFamily="'Fira Sans', Arial, sans-serif">Exercise Position</text>
     </svg>
   ),
 }
@@ -207,7 +207,7 @@ export default function WorkoutPage({ user }) {
         res = await api.get('/workout/gif/all', { params: { limit: 24 } })
       }
       setResults(res.data.data || [])
-    } catch (_) { setResults([]) }
+    } catch { setResults([]) }
     setLoading(false)
   }
 
@@ -224,7 +224,7 @@ export default function WorkoutPage({ user }) {
         res = await api.get('/workout/gif/body-part', { params: { body_part: bp.toLowerCase() } })
       }
       setResults(res.data.data || [])
-    } catch (_) { setResults([]) }
+    } catch { setResults([]) }
     setLoading(false)
   }
 
@@ -245,7 +245,7 @@ export default function WorkoutPage({ user }) {
             <button key={t.key} onClick={() => setTab(t.key)}
               style={{
                 padding: '9px 18px', background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 14, fontWeight: 500, fontFamily: 'Inter, sans-serif',
+                fontSize: 14, fontWeight: 500, fontFamily: '"Fira Sans", Arial, sans-serif',
                 color: tab === t.key ? '#22c55e' : '#a3a3a3',
                 borderBottom: tab === t.key ? '2px solid #22c55e' : '2px solid transparent',
                 marginBottom: -1, transition: 'all 0.2s',
@@ -324,7 +324,7 @@ function ProgramsTab() {
     try {
       const res = await api.get('/programs', { params: { level: lvl || undefined, limit: 20 } })
       setPrograms(res.data.data || [])
-    } catch (_) {}
+    } catch {}
     setLoading(false)
   }
 

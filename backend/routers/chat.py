@@ -16,11 +16,12 @@ from sqlalchemy.orm import Session
 
 from database.db_engine import get_db
 from database.db_models import User, ChatSession, ChatMessage
+from auth import get_current_user
 from models import ChatRequest, ChatResponse, ChatRequestDB
 from llm_service import chat_stream, chat_simple, detect_intent, list_agents
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 
 # ==============================================================
@@ -29,7 +30,7 @@ router = APIRouter()
 
 def _get_or_create_session(
     db: Session,
-    username: str,
+    user: User,
     session_id: int | None,
     first_message: str
 ) -> tuple[ChatSession, bool]:
@@ -37,16 +38,6 @@ def _get_or_create_session(
     Ambil sesi yang ada atau buat sesi baru.
     Returns: (session, is_new)
     """
-    # Pastikan user ada
-    user = db.query(User).filter(User.username == username).first()
-    if not user:
-        # Auto-create user jika belum ada (sama seperti /login)
-        user = User(username=username)
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-        logger.info(f"Auto-create user '{username}' saat chat")
-
     # Cari sesi yang diminta
     if session_id:
         session = db.query(ChatSession).filter(
@@ -92,12 +83,13 @@ def _save_message(db: Session, session_id: int, role: str, content: str, intent:
 @router.post("/session/stream")
 async def chat_session_stream(
     request: ChatRequestDB,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Streaming chat dengan Gemini AI yang menyimpan percakapan ke database.
 
-    - username wajib diisi (tanpa password)
+    - username wajib sama dengan akun yang sedang login
     - session_id opsional: jika None → buat sesi baru
     - Pesan user dan jawaban AI disimpan ke chat_messages
     - Response: text/event-stream (SSE)
@@ -107,10 +99,12 @@ async def chat_session_stream(
       data: {"session_id": 123, "is_new_session": true} → info sesi
       data: [DONE] → selesai
     """
+    if request.username != current_user.username:
+        raise HTTPException(status_code=403, detail="Akses ke akun ini ditolak.")
     # Dapatkan / buat sesi
     session, is_new = _get_or_create_session(
         db=db,
-        username=request.username,
+        user=current_user,
         session_id=request.session_id,
         first_message=request.message
     )
@@ -148,9 +142,9 @@ async def chat_session_stream(
 
             yield "data: [DONE]\n\n"
 
-        except Exception as e:
-            logger.error(f"Stream error: {e}")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        except Exception:
+            logger.exception("Stream error")
+            yield f"data: {json.dumps({'error': 'Gagal memproses percakapan.'})}\n\n"
         finally:
             # Simpan jawaban AI ke DB (setelah streaming selesai)
             if full_response:
@@ -176,15 +170,18 @@ async def chat_session_stream(
 @router.post("/session")
 async def chat_session(
     request: ChatRequestDB,
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
 ):
     """
     Non-streaming chat yang menyimpan percakapan ke database.
     Berguna untuk testing atau client yang tidak mendukung SSE.
     """
+    if request.username != current_user.username:
+        raise HTTPException(status_code=403, detail="Akses ke akun ini ditolak.")
     session, is_new = _get_or_create_session(
         db=db,
-        username=request.username,
+        user=current_user,
         session_id=request.session_id,
         first_message=request.message
     )
@@ -218,13 +215,13 @@ async def chat_session(
 
 
 # ==============================================================
-# POST /stream — streaming tanpa DB (testing / anonymous)
+# POST /stream — streaming tanpa DB (testing)
 # ==============================================================
-@router.post("/stream")
+@router.post("/stream", dependencies=[Depends(get_current_user)])
 async def chat_endpoint_stream(request: ChatRequest):
     """
     Streaming chat TANPA menyimpan ke database.
-    Cocok untuk testing cepat atau mode anonim.
+    Cocok untuk testing cepat oleh user yang sudah login.
     """
     user_profile_dict = request.user_profile.model_dump() if request.user_profile else None
     history_dicts = [{"role": m.role, "content": m.content} for m in request.history]
@@ -238,9 +235,9 @@ async def chat_endpoint_stream(request: ChatRequest):
             ):
                 yield f"data: {json.dumps({'chunk': chunk})}\n\n"
             yield "data: [DONE]\n\n"
-        except Exception as e:
-            logger.error(f"Stream error: {e}")
-            yield f"data: {json.dumps({'error': str(e)})}\n\n"
+        except Exception:
+            logger.exception("Stream error")
+            yield f"data: {json.dumps({'error': 'Gagal memproses percakapan.'})}\n\n"
 
     return StreamingResponse(
         generate(),
@@ -256,7 +253,7 @@ async def chat_endpoint_stream(request: ChatRequest):
 # ==============================================================
 # POST / — non-streaming tanpa DB (testing)
 # ==============================================================
-@router.post("", response_model=ChatResponse)
+@router.post("", response_model=ChatResponse, dependencies=[Depends(get_current_user)])
 async def chat_endpoint(request: ChatRequest):
     """Non-streaming chat TANPA database (untuk testing)."""
     user_profile_dict = request.user_profile.model_dump() if request.user_profile else None

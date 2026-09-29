@@ -9,6 +9,7 @@ import NutritionPage from './pages/NutritionPage'
 import WorkoutPage from './pages/WorkoutPage'
 import ProfilePage from './pages/ProfilePage'
 import PlanGeneratorPage from './pages/PlanGeneratorPage'
+import api from './api'
 
 // Komponen Wrapper untuk membatasi akses halaman hanya untuk user yang sudah login/terdaftar
 function ProtectedRoute({ children, user }) {
@@ -23,10 +24,20 @@ export default function App() {
   // Mengambil data pengguna dari localStorage saat aplikasi pertama kali dimuat
   useEffect(() => {
     const stored = localStorage.getItem('fitmind_user')
-    if (stored) {
-      try { setUser(JSON.parse(stored)) } catch (_) {}
+    const token = localStorage.getItem('fitmind_token')
+    if (!stored || !token) {
+      localStorage.removeItem('fitmind_user')
+      setLoaded(true)
+      return
     }
-    setLoaded(true)
+    api.get('/users/me')
+      .then(({ data }) => setUser(data))
+      .catch(() => {
+        localStorage.removeItem('fitmind_token')
+        localStorage.removeItem('fitmind_user')
+        localStorage.removeItem('fitmind_profile')
+      })
+      .finally(() => setLoaded(true))
   }, [])
 
   // Callback untuk sinkronisasi state user ketika ada perubahan profil (misal: berat badan, tinggi badan)

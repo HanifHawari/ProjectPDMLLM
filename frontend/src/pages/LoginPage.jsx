@@ -18,6 +18,7 @@ export default function LoginPage() {
     try {
       const res = await api.post('/users/login', { username: username.trim(), password: password.trim() })
       const user = res.data
+      localStorage.setItem('fitmind_token', user.token)
       localStorage.setItem('fitmind_user', JSON.stringify({
         username: user.username,
         phone: user.phone,

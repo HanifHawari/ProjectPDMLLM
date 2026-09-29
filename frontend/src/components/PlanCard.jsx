@@ -36,7 +36,7 @@ export function WorkoutPlanCard({ plan, generationTime }) {
       document.body.appendChild(link)
       link.click()
       link.parentNode.removeChild(link)
-    } catch (err) {
+    } catch {
       alert('Gagal export ke calendar.')
     }
     setSyncing(false)
@@ -55,8 +55,7 @@ export function WorkoutPlanCard({ plan, generationTime }) {
     setSyncing(true)
     showToast('Sedang mengirim ke WhatsApp...', 'info', { title: 'Mengirim', duration: 3000 })
     try {
-      const payload = { ...plan, phone }
-      const res = await api.post('/whatsapp/send-plan', payload)
+      const res = await api.post('/whatsapp/send-plan', plan)
       if (res.data.success) {
         showToast('Program latihan berhasil dikirim ke WhatsApp kamu! 💪', 'success', { title: 'Terkirim!' })
       }
@@ -201,7 +200,7 @@ export function WorkoutPlanCard({ plan, generationTime }) {
         <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px' }} onClick={syncToCalendar} disabled={syncing}>
           📅 Sync ke Calendar
         </button>
-        <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px', background: '#25D366', borderColor: '#25D366', color: '#fff' }} onClick={sendToWhatsApp} disabled={syncing}>
+        <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px', backgroundColor: '#25D366', borderColor: '#25D366', color: '#fff' }} onClick={sendToWhatsApp} disabled={syncing}>
           {syncing ? '⏳ Mengirim...' : '📱 Kirim ke WhatsApp'}
         </button>
       </div>
@@ -244,7 +243,7 @@ export function MealPlanCard({ plan, generationTime }) {
       document.body.appendChild(link)
       link.click()
       link.parentNode.removeChild(link)
-    } catch (err) {
+    } catch {
       showToast('Gagal export ke calendar.', 'error', { title: 'Export Gagal' })
     }
     setSyncing(false)
@@ -263,8 +262,7 @@ export function MealPlanCard({ plan, generationTime }) {
     setSyncing(true)
     showToast('Sedang mengirim meal plan ke WhatsApp...', 'info', { title: 'Mengirim', duration: 3000 })
     try {
-      const payload = { ...plan, phone }
-      const res = await api.post('/whatsapp/send-plan', payload)
+      const res = await api.post('/whatsapp/send-plan', plan)
       if (res.data.success) {
         showToast('Meal plan berhasil dikirim ke WhatsApp kamu! 🥗', 'success', { title: 'Terkirim!' })
       }
@@ -383,7 +381,7 @@ export function MealPlanCard({ plan, generationTime }) {
         <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px' }} onClick={syncToCalendar} disabled={syncing}>
           📅 Sync ke Calendar
         </button>
-        <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px', background: '#25D366', borderColor: '#25D366', color: '#fff' }} onClick={sendToWhatsApp} disabled={syncing}>
+        <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px', backgroundColor: '#25D366', borderColor: '#25D366', color: '#fff' }} onClick={sendToWhatsApp} disabled={syncing}>
           {syncing ? '⏳ Mengirim...' : '📱 Kirim ke WhatsApp'}
         </button>
       </div>

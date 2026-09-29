@@ -6,12 +6,13 @@ Endpoint:
   POST /api/plans/generate  → Generate structured plan via LLM JSON Mode
 """
 import logging
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from auth import get_current_user
 from models import PlanGenerateRequest, APIResponse
 from agents.planner_agent import PlannerAgent
 
 logger = logging.getLogger(__name__)
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_user)])
 
 # Singleton planner agent
 _planner = PlannerAgent()
@@ -79,4 +80,4 @@ async def generate_plan(request: PlanGenerateRequest):
 
     except Exception as e:
         logger.error(f"[Plans] Error generating plan: {e}")
-        raise HTTPException(status_code=500, detail=f"Gagal generate plan: {str(e)}")
+        raise HTTPException(status_code=500, detail="Gagal membuat rencana. Silakan coba lagi.")

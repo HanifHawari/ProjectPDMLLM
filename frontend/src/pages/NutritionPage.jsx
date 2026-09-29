@@ -33,7 +33,7 @@ export default function NutritionPage({ user }) {
             <button key={t.key} onClick={() => setTab(t.key)}
               style={{
                 padding: '9px 18px', background: 'none', border: 'none', cursor: 'pointer',
-                fontSize: 14, fontWeight: 500, fontFamily: 'Inter, sans-serif',
+                fontSize: 14, fontWeight: 500, fontFamily: '"Fira Sans", Arial, sans-serif',
                 color: tab === t.key ? '#22c55e' : '#a3a3a3',
                 borderBottom: tab === t.key ? '2px solid #22c55e' : '2px solid transparent',
                 marginBottom: -1, transition: 'all 0.2s',
@@ -68,7 +68,7 @@ function FoodSearchTab() {
     try {
       const res = await api.get('/nutrition/search', { params: { q: query, ...allergens, limit: 20 } })
       setResults(res.data.data || [])
-    } catch (_) { setResults([]) }
+    } catch { setResults([]) }
     setLoading(false)
   }
 
@@ -127,7 +127,7 @@ function HealthyFoodsTab() {
     try {
       const res = await api.get('/nutrition/food-types')
       setFoodTypes(res.data.data || [])
-    } catch (_) {}
+    } catch {}
   }
 
   async function loadFoods(type = '') {
@@ -135,7 +135,7 @@ function HealthyFoodsTab() {
     try {
       const res = await api.get('/nutrition/healthy', { params: { food_type: type || undefined, limit: 30 } })
       setFoods(res.data.data || [])
-    } catch (_) {}
+    } catch {}
     setLoading(false)
   }
 
@@ -193,7 +193,7 @@ function MealPlanTab() {
         params: { target_calories: parseInt(calories), diet_type: dietType || undefined },
       })
       setResult(res.data.data)
-    } catch (_) {}
+    } catch {}
     setLoading(false)
   }
 

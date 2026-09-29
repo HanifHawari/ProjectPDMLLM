@@ -6,14 +6,12 @@ import logging
 from contextlib import asynccontextmanager
 from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse, JSONResponse
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from pydantic import ValidationError
 
-from config import APP_HOST, APP_PORT, ALLOWED_ORIGINS
-from data_loader import load_all_datasets
+from config import APP_ENV, APP_HOST, APP_PORT, ALLOWED_ORIGINS
 from vector_store import init_vector_stores
 from database.db_engine import init_db
 from routers import chat, workout, nutrition, programs, dashboard, users, plans, calendar, whatsapp
@@ -37,10 +35,9 @@ logger = logging.getLogger(__name__)
 # ==============================================================
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Inisialisasi database dan muat dataset saat server startup."""
+    """Inisialisasi database dan indeks vektor saat server startup."""
     logger.info("FitMind AI Backend starting...")
     init_db()
-    load_all_datasets()
     init_vector_stores()
     logger.info("Server siap menerima request!")
     yield
@@ -55,8 +52,8 @@ app = FastAPI(
     description="Backend API untuk FitMind AI — Gym & Nutrition LLM Platform",
     version="1.0.0",
     lifespan=lifespan,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=None if APP_ENV == "production" else "/docs",
+    redoc_url=None if APP_ENV == "production" else "/redoc",
 )
 
 # CORS Middleware
@@ -66,8 +63,16 @@ app.add_middleware(
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
-    allow_private_network=True,
 )
+
+
+@app.middleware("http")
+async def add_security_headers(request, call_next):
+    response = await call_next(request)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    return response
 
 # ==============================================================
 # Routers
@@ -90,7 +95,6 @@ app.include_router(whatsapp.router,  prefix="/api/whatsapp",  tags=["WhatsApp"])
 async def health_check():
     return {
         "status": "healthy",
-        "datasets_loaded": "All datasets migrated to Supabase SQL",
     }
 
 
@@ -107,8 +111,11 @@ if FRONTEND_DIST.exists():
     @app.get("/{full_path:path}", include_in_schema=False)
     async def serve_spa(full_path: str):
         # Cek apakah ada file statis langsung (favicon.ico, .mp4, .png, dll)
-        file_path = FRONTEND_DIST / full_path
-        if file_path.exists() and file_path.is_file():
+        dist_root = FRONTEND_DIST.resolve()
+        file_path = (dist_root / full_path).resolve()
+        if not file_path.is_relative_to(dist_root) or full_path.startswith("api/"):
+            raise HTTPException(status_code=404)
+        if file_path.is_file() and file_path.suffix.lower() in {".svg", ".jpg", ".jpeg", ".png", ".webp", ".gif", ".mp4", ".ico"}:
             return FileResponse(file_path)
         # Fallback ke index.html untuk SPA routing (React Router)
         return FileResponse(FRONTEND_DIST / "index.html")
@@ -129,6 +136,6 @@ if __name__ == "__main__":
         "main:app",
         host=APP_HOST,
         port=APP_PORT,
-        reload=True,
+        reload=APP_ENV != "production",
         log_level="info"
     )

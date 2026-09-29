@@ -1,18 +1,11 @@
 """
-FitMind AI - SQLAlchemy Database Models (Simplified)
+FitMind AI - model SQLAlchemy untuk akun, percakapan, dan data kebugaran.
 
-Hanya 4 tabel:
-  1. users         — identitas user (username saja, tanpa password)
-  2. user_profiles — profil kebugaran + pantangan alergen
-  3. chat_sessions — pengelompokan percakapan
-  4. chat_messages — isi pesan tanya-jawab dengan AI
-
-Data fitness (makanan, gerakan, program) TIDAK disimpan di DB —
-tetap menggunakan CSV yang di-load ke RAM via data_loader.py.
+CSV diimpor ke tabel dataset melalui scripts/migrate_csv_to_sql.py.
 """
 from sqlalchemy import (
     Boolean, Column, Float, ForeignKey, Integer,
-    String, Text, DateTime, UniqueConstraint, Index
+    String, Text, DateTime, Index
 )
 from sqlalchemy.orm import DeclarativeBase, relationship
 from sqlalchemy.sql import func

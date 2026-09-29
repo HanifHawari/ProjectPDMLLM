@@ -72,7 +72,7 @@ function BMICard() {
         params: { weight_kg: parseFloat(weight), height_m: parseFloat(height) / 100 },
       })
       setResult(res.data.data)
-    } catch (_) {}
+    } catch {}
     setLoading(false)
   }
 
@@ -130,7 +130,7 @@ function CaloriesCard() {
         },
       })
       setResult(res.data.data)
-    } catch (_) {}
+    } catch {}
     setLoading(false)
   }
 
@@ -179,7 +179,7 @@ function BPMCard() {
         params: { age: parseInt(age), avg_bpm: parseInt(bpm) },
       })
       setResult(res.data.data)
-    } catch (_) {}
+    } catch {}
     setLoading(false)
   }
 

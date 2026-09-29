@@ -82,7 +82,7 @@ export default function ChatPage({ user }) {
     try {
       const res = await api.get(`/users/${username}/sessions`)
       setSessions(res.data.data || [])
-    } catch (_) {}
+    } catch {}
   }
 
   async function loadSessionMessages(sessionId) {
@@ -93,7 +93,7 @@ export default function ChatPage({ user }) {
       const data = res.data.data
       const msgs = (data.messages || []).map(m => ({ role: m.role, content: m.content, intent: m.intent }))
       setMessages(msgs)
-    } catch (_) {}
+    } catch {}
   }
 
   async function sendMessage() {
@@ -121,14 +121,25 @@ export default function ChatPage({ user }) {
       const API_URL = import.meta.env.VITE_API_URL || '/api'
       const response = await fetch(`${API_URL}/chat/session/stream`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${localStorage.getItem('fitmind_token') || ''}`,
+        },
         body: JSON.stringify(body),
       })
+
+      if (response.status === 401) {
+        localStorage.removeItem('fitmind_token')
+        localStorage.removeItem('fitmind_user')
+        localStorage.removeItem('fitmind_profile')
+        window.location.assign('/login')
+        return
+      }
+      if (!response.ok || !response.body) throw new Error('Chat tidak tersedia')
 
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let buffer = ''
-      let newSessionId = activeSessionId
 
       while (true) {
         const { done, value } = await reader.read()
@@ -154,14 +165,13 @@ export default function ChatPage({ user }) {
               })
             }
             if (json.session_id) {
-              newSessionId = json.session_id
               setActiveSessionId(json.session_id)
             }
-          } catch (_) {}
+          } catch {}
         }
       }
       await loadSessions()
-    } catch (err) {
+    } catch {
       setMessages(prev => {
         const updated = [...prev]
         updated[updated.length - 1] = { ...updated[updated.length - 1], content: 'Terjadi error saat menghubungi AI.' }
@@ -184,7 +194,7 @@ export default function ChatPage({ user }) {
       await api.delete(`/users/${username}/sessions/${sessionId}`)
       setSessions(prev => prev.filter(s => s.id !== sessionId))
       if (activeSessionId === sessionId) newChat()
-    } catch (_) {}
+    } catch {}
   }
 
   function handleKeyDown(e) {
@@ -309,11 +319,9 @@ export default function ChatPage({ user }) {
             }}>
               {msg.role === 'assistant' && (
                 <div style={{
-                  width: 28, height: 28, borderRadius: '50%', background: 'rgba(34,197,94,0.15)',
-                  border: '1px solid rgba(34,197,94,0.3)', display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontSize: 12, color: '#22c55e', marginRight: 10, flexShrink: 0, marginTop: 2,
+                  width: 28, height: 28, marginRight: 10, flexShrink: 0, marginTop: 2,
                 }}>
-                  AI
+                  <img src="/pp-ai.png" alt="FitMindAI" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'hue-rotate(-75deg) saturate(.85)' }} />
                 </div>
               )}
               <div style={{

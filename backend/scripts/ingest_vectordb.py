@@ -1,7 +1,5 @@
-import os
 import sys
 import logging
-import shutil
 from pathlib import Path
 
 # Tambahkan direktori backend ke sys.path agar bisa import modul backend
@@ -10,9 +8,8 @@ sys.path.append(str(backend_dir))
 
 from langchain_core.documents import Document
 from langchain_chroma import Chroma
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
 import pandas as pd
-from config import CHROMA_PERSIST_DIR, GEMINI_API_KEY, WORKOUT_CSV, HEALTHY_FOODS_CSV
+from config import CHROMA_PERSIST_DIR, WORKOUT_CSV, HEALTHY_FOODS_CSV
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)

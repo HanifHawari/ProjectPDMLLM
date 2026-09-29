@@ -4,20 +4,45 @@ Endpoints untuk integrasi WhatsApp melalui Fonnte API.
 """
 import logging
 import httpx
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import List, Optional
+from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel, Field
+from typing import List, Literal, Optional
 from config import FONNTE_TOKEN
+from auth import get_current_user
+from database.db_models import User
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+class WorkoutExercise(BaseModel):
+    name: str = Field(..., max_length=100)
+    sets: int
+    reps: str = Field(..., max_length=50)
+
+
+class WorkoutDay(BaseModel):
+    day: str = Field(..., max_length=50)
+    focus: str = Field(..., max_length=100)
+    exercises: List[WorkoutExercise] = Field(..., max_length=30)
+
+
+class MealFood(BaseModel):
+    name: str = Field(..., max_length=100)
+    portion: str = Field(..., max_length=50)
+    calories: int
+
+
+class MealEntry(BaseModel):
+    meal_name: str = Field(..., max_length=100)
+    time: Optional[str] = Field(None, max_length=30)
+    foods: List[MealFood] = Field(..., max_length=30)
+
+
 class WhatsAppSendRequest(BaseModel):
-    phone: str
-    plan_type: str
-    title: str
-    schedule: Optional[List[dict]] = None
-    meals: Optional[List[dict]] = None
+    plan_type: Literal["workout", "meal"]
+    title: str = Field(..., max_length=100)
+    schedule: Optional[List[WorkoutDay]] = Field(None, max_length=14)
+    meals: Optional[List[MealEntry]] = Field(None, max_length=20)
 
 def format_workout_message(plan: WhatsAppSendRequest) -> str:
     msg = f"🏋️ *FITMIND AI: {plan.title}* 🏋️\n\n"
@@ -25,9 +50,9 @@ def format_workout_message(plan: WhatsAppSendRequest) -> str:
         return msg + "Jadwal kosong."
         
     for s in plan.schedule:
-        msg += f"🗓️ *{s.get('day')} - {s.get('focus')}*\n"
-        for ex in s.get("exercises", []):
-            msg += f"  • {ex.get('name')}: {ex.get('sets')} set x {ex.get('reps')}\n"
+        msg += f"🗓️ *{s.day} - {s.focus}*\n"
+        for ex in s.exercises:
+            msg += f"  • {ex.name}: {ex.sets} set x {ex.reps}\n"
         msg += "\n"
     
     msg += "💪 Semangat latihannya!\n_Pesan ini dikirim otomatis oleh FitMind AI._"
@@ -39,16 +64,16 @@ def format_meal_message(plan: WhatsAppSendRequest) -> str:
         return msg + "Jadwal kosong."
         
     for m in plan.meals:
-        msg += f"⏰ *{m.get('time')} - {m.get('meal_name')}*\n"
-        for food in m.get("foods", []):
-            msg += f"  • {food.get('name')} ({food.get('portion')}): {food.get('calories')} kkal\n"
+        msg += f"⏰ *{m.time or ''} - {m.meal_name}*\n"
+        for food in m.foods:
+            msg += f"  • {food.name} ({food.portion}): {food.calories} kkal\n"
         msg += "\n"
     
     msg += "🍎 Ingat minum air yang cukup!\n_Pesan ini dikirim otomatis oleh FitMind AI._"
     return msg
 
 @router.post("/send-plan")
-async def send_plan_whatsapp(request: WhatsAppSendRequest):
+async def send_plan_whatsapp(request: WhatsAppSendRequest, current_user: User = Depends(get_current_user)):
     """
     Format JSON plan ke teks dan kirim via WhatsApp (Fonnte).
     """
@@ -56,7 +81,9 @@ async def send_plan_whatsapp(request: WhatsAppSendRequest):
         raise HTTPException(status_code=400, detail="Fonnte Token belum dikonfigurasi di .env")
         
     # 1. Bersihkan nomor HP (pastikan mulai dari 08 atau 628)
-    phone = request.phone.strip()
+    phone = (current_user.phone or "").strip()
+    if not phone:
+        raise HTTPException(status_code=400, detail="Nomor WhatsApp akun belum tersedia.")
     if phone.startswith("0"):
         phone = "62" + phone[1:]
     elif phone.startswith("+"):
@@ -67,6 +94,8 @@ async def send_plan_whatsapp(request: WhatsAppSendRequest):
         message_text = format_workout_message(request)
     else:
         message_text = format_meal_message(request)
+    if len(message_text) > 10000:
+        raise HTTPException(status_code=422, detail="Pesan rencana terlalu panjang.")
 
     # 3. Kirim via Fonnte API
     url = "https://api.fonnte.com/send"
@@ -88,11 +117,13 @@ async def send_plan_whatsapp(request: WhatsAppSendRequest):
                 if result.get("status") is True:
                     return {"success": True, "message": "Pesan berhasil dikirim ke WhatsApp."}
                 else:
-                    logger.error(f"Fonnte Error: {result}")
-                    raise HTTPException(status_code=400, detail=f"Fonnte error: {result.get('reason', 'Unknown')}")
+                    logger.error("Fonnte menolak permintaan pengiriman")
+                    raise HTTPException(status_code=400, detail="Pengiriman WhatsApp ditolak oleh layanan.")
             else:
-                logger.error(f"Fonnte HTTP Error: {resp.status_code} {resp.text}")
-                raise HTTPException(status_code=resp.status_code, detail="Gagal terhubung ke Fonnte API.")
+                logger.error("Fonnte HTTP error: %s", resp.status_code)
+                raise HTTPException(status_code=502, detail="Gagal terhubung ke layanan WhatsApp.")
+    except HTTPException:
+        raise
     except Exception as e:
-        logger.error(f"Error sending WA: {str(e)}")
-        raise HTTPException(status_code=500, detail=str(e))
+        logger.exception("Error sending WA")
+        raise HTTPException(status_code=502, detail="Gagal mengirim WhatsApp.") from e

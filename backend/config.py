@@ -17,13 +17,6 @@ GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY", "")
 GEMINI_MODEL: str = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
 
 # ==============================================================
-# Groq API
-# ==============================================================
-GROQ_API_KEY: str = os.getenv("GROQ_API_KEY", "")
-GROQ_MODEL: str = os.getenv("GROQ_MODEL", "llama-3.3-70b-versatile")
-
-
-# ==============================================================
 # Fonnte API (WhatsApp)
 # ==============================================================
 FONNTE_TOKEN: str = os.getenv("FONNTE_TOKEN", "")
@@ -36,7 +29,7 @@ RAPIDAPI_KEY: str = os.getenv("RAPIDAPI_KEY", "")
 # ==============================================================
 # App
 # ==============================================================
-APP_ENV: str = os.getenv("APP_ENV", "development")
+APP_ENV: str = os.getenv("APP_ENV", "production")
 APP_HOST: str = os.getenv("APP_HOST", "0.0.0.0")
 # Railway menggunakan variabel environment bernama 'PORT', bukan 'APP_PORT'
 APP_PORT: int = int(os.getenv("PORT", os.getenv("APP_PORT", "8000")))
@@ -59,7 +52,7 @@ USER_PROFILES_CSV = DATASET_BASE / "userprofil" / "gym_members_exercise_tracking
 # ==============================================================
 # ChromaDB
 # ==============================================================
-CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", "./chroma_db")
+CHROMA_PERSIST_DIR: str = os.getenv("CHROMA_PERSIST_DIR", str(BASE_DIR / "chroma_db"))
 
 # ==============================================================
 # Database (SQLAlchemy)
@@ -76,8 +69,8 @@ DATABASE_URL: str = os.getenv(
 # ==============================================================
 # Set ALLOWED_ORIGINS di Environment Variables, pisahkan dengan koma.
 # Contoh: https://frontend-fitmind.vercel.app,http://localhost:5173
-# Jika tidak diset, default mengizinkan semua origin (aman untuk testing).
-_origins_raw: str = os.getenv("ALLOWED_ORIGINS", "*")
+# Frontend production disajikan dari origin yang sama; Vite lokal perlu CORS.
+_origins_raw: str = os.getenv("ALLOWED_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173")
 if _origins_raw == "*":
     ALLOWED_ORIGINS: list[str] = ["*"]
 else:

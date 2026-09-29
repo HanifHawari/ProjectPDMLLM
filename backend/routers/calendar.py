@@ -7,7 +7,7 @@ from datetime import datetime, timedelta, date
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import Response
 from pydantic import BaseModel
-from typing import List, Optional, Any
+from typing import List, Optional
 
 # icalendar sudah kita install di sesi sebelumnya
 from icalendar import Calendar, Event, Alarm
