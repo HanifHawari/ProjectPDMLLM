@@ -120,7 +120,7 @@ body {
 }
 .btn-ghost:hover {
   border-color: #22c55e;
-  color: #0a0a0a;
+  color: #22c55e;
 }
 
 .input-field {
@@ -170,7 +170,8 @@ body {
   font-weight: 500;
 }
 
-button:not(.no-fill-hover) {
+button.btn-primary:not(.no-fill-hover),
+button.battery-hover:not(.no-fill-hover) {
   background-image: linear-gradient(var(--button-fill, #22c55e), var(--button-fill, #22c55e)) !important;
   background-position: left center !important;
   background-repeat: no-repeat !important;
@@ -180,7 +181,8 @@ button:not(.no-fill-hover) {
 
 .btn-primary { --button-fill: #16a34a; }
 
-button:not(.no-fill-hover):not(:disabled):hover {
+button.btn-primary:not(.no-fill-hover):not(:disabled):hover,
+button.battery-hover:not(.no-fill-hover):not(:disabled):hover {
   background-size: 100% 100% !important;
   color: #0a0a0a !important;
 }
@@ -191,7 +193,8 @@ button.no-fill-hover {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  button:not(.no-fill-hover) {
+  button.btn-primary:not(.no-fill-hover),
+  button.battery-hover:not(.no-fill-hover) {
     transition-duration: .01ms !important;
   }
 }

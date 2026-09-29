@@ -139,7 +139,12 @@ def search_programs(
     with SessionLocal() as db:
         q = db.query(DBProgramSummary)
         
-        if level:
+        if level and level.lower() == "beginner":
+            q = q.filter(or_(
+                DBProgramSummary.level.ilike("%Beginner%"),
+                DBProgramSummary.level.ilike("%Novice%"),
+            ))
+        elif level:
             q = q.filter(DBProgramSummary.level.ilike(f"%{level}%"))
         if goal:
             q = q.filter(DBProgramSummary.goal.ilike(f"%{goal}%"))

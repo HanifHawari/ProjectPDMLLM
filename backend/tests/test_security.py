@@ -1,14 +1,16 @@
 """Regression checks for account isolation and static-file boundaries."""
 import asyncio
+import base64
 import unittest
+from pathlib import Path
 
 from fastapi import HTTPException
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.pool import StaticPool
 
-from database.db_engine import get_db
+from database.db_engine import get_db, init_db
 from database.db_models import Base
 from main import app, serve_spa
 
@@ -51,6 +53,36 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(self.client.post("/api/plans/generate", json={}).status_code, 401)
         self.assertEqual(self.client.post("/api/whatsapp/send-plan", json={"phone": "081234567890", "plan_type": "workout", "title": "A"}).status_code, 401)
         self.assertEqual(self.client.get("/api/workout/gif/all").status_code, 401)
+
+    def test_avatar_is_private_and_persists_until_removed(self):
+        alice = self._register_and_login("alice")
+        bob = self._register_and_login("bob")
+        image = Path(__file__).resolve().parents[2] / "frontend" / "public" / "foto1.jpg"
+        data_url = "data:image/jpeg;base64," + base64.b64encode(image.read_bytes()).decode("ascii")
+
+        self.assertEqual(self.client.put("/api/users/me/avatar", json={"data_url": data_url}).status_code, 401)
+        self.assertEqual(self.client.put("/api/users/me/avatar", json={"data_url": "data:image/png;base64,AAAA"}, headers=alice).status_code, 400)
+        response = self.client.put("/api/users/me/avatar", json={"data_url": data_url}, headers=alice)
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(self.client.get("/api/users/me", headers=alice).json()["avatar_data"], data_url)
+        self.assertIsNone(self.client.get("/api/users/me", headers=bob).json()["avatar_data"])
+        self.assertEqual(self.client.delete("/api/users/me/avatar", headers=alice).status_code, 200)
+        self.assertIsNone(self.client.get("/api/users/me", headers=alice).json()["avatar_data"])
+
+    def test_avatar_column_is_added_to_existing_database(self):
+        from unittest.mock import patch
+        from database import db_engine
+
+        legacy_engine = create_engine("sqlite://", connect_args={"check_same_thread": False}, poolclass=StaticPool)
+        try:
+            with legacy_engine.begin() as connection:
+                connection.exec_driver_sql("CREATE TABLE users (id INTEGER PRIMARY KEY, username VARCHAR(100) NOT NULL)")
+            with patch.object(db_engine, "engine", legacy_engine):
+                init_db()
+                init_db()
+            self.assertIn("avatar_data", {column["name"] for column in inspect(legacy_engine).get_columns("users")})
+        finally:
+            legacy_engine.dispose()
 
     def test_invalid_token_and_path_are_rejected(self):
         alice = self._register_and_login("alice")

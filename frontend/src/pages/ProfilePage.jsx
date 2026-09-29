@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
+import UserAvatar from '../components/UserAvatar'
 import api from '../api'
 
 const goals = ['Weight Loss', 'Muscle Gain', 'Endurance', 'Maintenance', 'Flexibility']
@@ -21,8 +22,13 @@ export default function ProfilePage({ user, onProfileSaved }) {
   const [fetching, setFetching] = useState(true)
   const [saved, setSaved] = useState(false)
   const [bmi, setBmi] = useState(null)
+  const [avatarData, setAvatarData] = useState(user?.avatar_data || null)
+  const [photoBusy, setPhotoBusy] = useState(false)
+  const [photoError, setPhotoError] = useState('')
   const navigate = useNavigate()
   const username = user?.username
+
+  useEffect(() => { setAvatarData(user?.avatar_data || null) }, [user?.avatar_data])
 
   useEffect(() => {
     if (username) loadProfile()
@@ -91,10 +97,57 @@ export default function ProfilePage({ user, onProfileSaved }) {
     setForm(prev => ({ ...prev, [key]: value }))
   }
 
+  async function uploadPhoto(event) {
+    const file = event.target.files?.[0]
+    event.target.value = ''
+    if (!file) return
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 5 * 1024 * 1024) {
+      setPhotoError('Gunakan foto JPG, PNG, atau WebP berukuran maksimal 5 MB.')
+      return
+    }
+    setPhotoBusy(true)
+    setPhotoError('')
+    try {
+      const bitmap = await createImageBitmap(file)
+      const canvas = document.createElement('canvas')
+      canvas.width = 256
+      canvas.height = 256
+      const context = canvas.getContext('2d')
+      const side = Math.min(bitmap.width, bitmap.height)
+      context.fillStyle = '#1c2026'
+      context.fillRect(0, 0, 256, 256)
+      context.drawImage(bitmap, (bitmap.width - side) / 2, (bitmap.height - side) / 2, side, side, 0, 0, 256, 256)
+      bitmap.close()
+      const dataUrl = canvas.toDataURL('image/jpeg', 0.82)
+      if (dataUrl.length > 340_000) throw new Error('Foto terlalu besar setelah diproses.')
+      const { data } = await api.put('/users/me/avatar', { data_url: dataUrl })
+      setAvatarData(data.data.avatar_data)
+      onProfileSaved?.()
+    } catch {
+      setPhotoError('Foto gagal disimpan. Coba gambar lain.')
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
+
+  async function removePhoto() {
+    setPhotoBusy(true)
+    setPhotoError('')
+    try {
+      await api.delete('/users/me/avatar')
+      setAvatarData(null)
+      onProfileSaved?.()
+    } catch {
+      setPhotoError('Foto gagal dihapus. Coba lagi.')
+    } finally {
+      setPhotoBusy(false)
+    }
+  }
+
   if (fetching) {
     return (
       <div style={{ display: 'flex', minHeight: '100vh' }}>
-        <Sidebar username={username} />
+        <Sidebar username={username} avatarData={avatarData} />
         <main className="dashboard-main" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <div style={{ color: '#525252' }}>Memuat profil...</div>
         </main>
@@ -120,11 +173,19 @@ export default function ProfilePage({ user, onProfileSaved }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar username={username} />
-      <main className="dashboard-main" style={{ maxWidth: 800 }}>
-        <div style={{ marginBottom: 28 }}>
-          <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4 }}>Profil Kebugaran</h1>
-          <p style={{ fontSize: 14, color: '#a3a3a3' }}>Data ini digunakan oleh AI untuk memberikan rekomendasi yang lebih personal.</p>
+      <Sidebar username={username} avatarData={avatarData} />
+      <main className="dashboard-main profile-page" style={{ maxWidth: 1020 }}>
+        <div className="profile-hero">
+          <UserAvatar username={username} avatarData={avatarData} size={104} />
+          <h1>{username}</h1>
+          <p>Data ini membantu FitMind AI memberi rekomendasi yang lebih personal.</p>
+          <div className="profile-photo-actions">
+            <label htmlFor="profile-photo-input" className={photoBusy ? 'is-disabled' : ''}>Ubah foto</label>
+            <input id="profile-photo-input" type="file" accept="image/jpeg,image/png,image/webp"
+              onChange={uploadPhoto} disabled={photoBusy} />
+            {avatarData && <button type="button" onClick={removePhoto} disabled={photoBusy}>Hapus foto</button>}
+          </div>
+          {photoError && <p className="profile-photo-error" role="alert">{photoError}</p>}
         </div>
 
         {/* BMI indicator */}
@@ -145,7 +206,7 @@ export default function ProfilePage({ user, onProfileSaved }) {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
           {/* Personal Info */}
           <Section title="Informasi Dasar">
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
+            <div className="profile-basic-fields" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
               <Field label="Usia">
                 <input className="input-field" type="number" placeholder="Tahun" value={form.age} onChange={e => set('age', e.target.value)} />
               </Field>
@@ -267,7 +328,7 @@ export default function ProfilePage({ user, onProfileSaved }) {
 
 function Section({ title, children }) {
   return (
-    <div className="card" style={{ padding: 24 }}>
+    <div className="card profile-section" style={{ padding: 24 }}>
       <div style={{ fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.07em', color: '#a3a3a3', marginBottom: 4 }}>{title}</div>
       <div style={{ height: 1, background: '#2a2a2a', marginBottom: 18 }} />
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>

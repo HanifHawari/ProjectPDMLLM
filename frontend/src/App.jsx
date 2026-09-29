@@ -41,9 +41,13 @@ export default function App() {
   }, [])
 
   // Callback untuk sinkronisasi state user ketika ada perubahan profil (misal: berat badan, tinggi badan)
-  function handleProfileSaved() {
-    const stored = localStorage.getItem('fitmind_user')
-    if (stored) setUser(JSON.parse(stored))
+  async function handleProfileSaved() {
+    try {
+      const { data } = await api.get('/users/me')
+      setUser(data)
+    } catch {
+      // The profile page keeps its own saved state if the refresh fails.
+    }
   }
 
   if (!loaded) return null // Menghindari flash halaman login jika user sebenarnya sudah terautentikasi

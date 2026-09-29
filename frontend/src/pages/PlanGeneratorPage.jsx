@@ -4,10 +4,10 @@ import { WorkoutPlanCard, MealPlanCard } from '../components/PlanCard'
 import api from '../api'
 
 const GOALS = [
-  { value: 'muscle_gain', label: '💪 Massa Otot', desc: 'Hypertrophy & strength' },
-  { value: 'weight_loss', label: '🔥 Turun Berat', desc: 'Fat loss & conditioning' },
-  { value: 'endurance', label: '🏃 Endurance', desc: 'Stamina & cardio' },
-  { value: 'maintenance', label: '⚡ Maintenance', desc: 'Jaga kebugaran' },
+  { value: 'muscle_gain', label: 'Massa Otot', desc: 'Hypertrophy & strength' },
+  { value: 'weight_loss', label: 'Turun Berat', desc: 'Fat loss & conditioning' },
+  { value: 'endurance', label: 'Endurance', desc: 'Stamina & cardio' },
+  { value: 'maintenance', label: 'Maintenance', desc: 'Jaga kebugaran' },
 ]
 
 const LEVELS = [
@@ -17,9 +17,9 @@ const LEVELS = [
 ]
 
 const EQUIPMENT = [
-  { value: 'Full Gym', label: '🏢 Full Gym' },
-  { value: 'Dumbbells Only', label: '🏠 Dumbbells' },
-  { value: 'Bodyweight', label: '🤸 Bodyweight' },
+  { value: 'Full Gym', label: 'Full Gym' },
+  { value: 'Dumbbells Only', label: 'Dumbbells' },
+  { value: 'Bodyweight', label: 'Bodyweight' },
 ]
 
 export default function PlanGeneratorPage({ user }) {
@@ -67,10 +67,10 @@ export default function PlanGeneratorPage({ user }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar username={user?.username} />
-      <main className="dashboard-main">
+      <Sidebar username={user?.username} avatarData={user?.avatar_data} />
+      <main className="dashboard-main plan-page">
         {/* Header */}
-        <div style={{ marginBottom: 28 }}>
+        <div className="plan-header" style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4 }}>
             AI Plan Generator
           </h1>
@@ -80,9 +80,9 @@ export default function PlanGeneratorPage({ user }) {
         </div>
 
         {/* Plan Type Tabs */}
-        <div style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid #2a2a2a', paddingBottom: 1 }}>
-          {[{ key: 'workout', label: '🏋️ Workout Plan' }, { key: 'meal', label: '🥗 Meal Plan' }].map(t => (
-            <button key={t.key} onClick={() => { setTab(t.key); setPlan(null); }}
+        <div className="plan-tabs" style={{ display: 'flex', gap: 4, marginBottom: 28, borderBottom: '1px solid #2a2a2a', paddingBottom: 1 }}>
+          {[{ key: 'workout', label: 'Workout Plan' }, { key: 'meal', label: 'Meal Plan' }].map(t => (
+            <button key={t.key} className={tab === t.key ? 'is-active' : ''} onClick={() => { setTab(t.key); setPlan(null); }}
               style={{
                 padding: '9px 18px', background: 'none', border: 'none', cursor: 'pointer',
                 fontSize: 14, fontWeight: 500, fontFamily: '"Fira Sans", Arial, sans-serif',
@@ -95,12 +95,12 @@ export default function PlanGeneratorPage({ user }) {
 
         <div className={`plan-grid${plan ? '' : ' single'}`} style={{ gap: 24 }}>
           {/* ── Form ── */}
-          <div className="card" style={{ padding: 24, alignSelf: 'start' }}>
+          <div className="card plan-form" style={{ padding: 24, alignSelf: 'start' }}>
             {/* Goal */}
             <label style={labelStyle}>Goal</label>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
+            <div className="plan-goals" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
               {GOALS.map(g => (
-                <button key={g.value} onClick={() => setGoal(g.value)}
+                <button key={g.value} className={goal === g.value ? 'is-selected' : ''} aria-pressed={goal === g.value} onClick={() => setGoal(g.value)}
                   style={{
                     ...optionBtnStyle,
                     borderColor: goal === g.value ? '#22c55e' : '#2a2a2a',
@@ -114,7 +114,7 @@ export default function PlanGeneratorPage({ user }) {
 
             {/* Level */}
             <label style={labelStyle}>Level</label>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+            <div className="plan-levels" style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
               {LEVELS.map(l => (
                 <button key={l.value} onClick={() => setLevel(l.value)}
                   className={level === l.value ? 'badge-green' : 'badge-gray'}
@@ -128,9 +128,9 @@ export default function PlanGeneratorPage({ user }) {
               <>
                 {/* Days per week */}
                 <label style={labelStyle}>Hari / Minggu</label>
-                <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
+                <div className="plan-days" style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
                   {[2, 3, 4, 5, 6].map(d => (
-                    <button key={d} onClick={() => setDays(d)}
+                    <button key={d} className={days === d ? 'is-selected' : ''} aria-pressed={days === d} onClick={() => setDays(d)}
                       style={{
                         ...dayBtnStyle,
                         borderColor: days === d ? '#22c55e' : '#2a2a2a',
@@ -142,7 +142,7 @@ export default function PlanGeneratorPage({ user }) {
 
                 {/* Equipment */}
                 <label style={labelStyle}>Equipment</label>
-                <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
+                <div className="plan-equipment" style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
                   {EQUIPMENT.map(e => (
                     <button key={e.value} onClick={() => setEquipment(e.value)}
                       className={equipment === e.value ? 'badge-green' : 'badge-gray'}
@@ -187,7 +187,7 @@ export default function PlanGeneratorPage({ user }) {
                   Generating...
                 </span>
               ) : (
-                `✨ Generate ${tab === 'meal' ? 'Meal' : 'Workout'} Plan`
+                `Generate ${tab === 'meal' ? 'Meal' : 'Workout'} Plan`
               )}
             </button>
 
@@ -213,11 +213,8 @@ export default function PlanGeneratorPage({ user }) {
               display: 'flex', flexDirection: 'column', alignItems: 'center',
               justifyContent: 'center', padding: 60, color: '#525252',
             }}>
-              <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.3 }}>
-                {tab === 'workout' ? '🏋️' : '🥗'}
-              </div>
               <div style={{ fontSize: 15, textAlign: 'center', maxWidth: 300 }}>
-                Isi form di samping, lalu klik <strong style={{ color: '#22c55e' }}>Generate</strong> untuk membuat {tab === 'workout' ? 'program latihan' : 'meal plan'} terstruktur.
+                Isi formulir, lalu tekan <strong style={{ color: '#22c55e' }}>Generate</strong> untuk membuat {tab === 'workout' ? 'program latihan' : 'meal plan'} terstruktur.
               </div>
             </div>
           )}

@@ -16,7 +16,7 @@ export default function NutritionPage({ user }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar username={user?.username} />
+      <Sidebar username={user?.username} avatarData={user?.avatar_data} />
       <main className="dashboard-main">
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4 }}>Nutrisi</h1>
@@ -120,6 +120,7 @@ function HealthyFoodsTab() {
   const [foodTypes, setFoodTypes] = useState([])
   const [selectedType, setSelectedType] = useState('')
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
 
   useEffect(() => { loadFoodTypes(); loadFoods() }, [])
 
@@ -132,10 +133,14 @@ function HealthyFoodsTab() {
 
   async function loadFoods(type = '') {
     setLoading(true)
+    setError('')
     try {
       const res = await api.get('/nutrition/healthy', { params: { food_type: type || undefined, limit: 30 } })
       setFoods(res.data.data || [])
-    } catch {}
+    } catch {
+      setFoods([])
+      setError('Data makanan belum dapat dimuat. Coba lagi.')
+    }
     setLoading(false)
   }
 
@@ -170,7 +175,13 @@ function HealthyFoodsTab() {
           </button>
         ))}
       </div>
-      {loading ? <LoadingSpinner /> : (
+      {loading ? <LoadingSpinner /> : error ? (
+        <div role="alert" style={{ textAlign: 'center', color: '#a3a3a3', padding: 40 }}>{error}</div>
+      ) : foods.length === 0 ? (
+        <div style={{ textAlign: 'center', color: '#a3a3a3', padding: 40 }}>
+          {selectedType ? 'Tidak ada makanan untuk kategori ini.' : 'Katalog makanan belum tersedia.'}
+        </div>
+      ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 14 }}>
           {foods.map((food, i) => <FoodCard key={i} food={food} />)}
         </div>

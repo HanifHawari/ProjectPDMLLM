@@ -57,7 +57,7 @@ export function WorkoutPlanCard({ plan, generationTime }) {
     try {
       const res = await api.post('/whatsapp/send-plan', plan)
       if (res.data.success) {
-        showToast('Program latihan berhasil dikirim ke WhatsApp kamu! 💪', 'success', { title: 'Terkirim!' })
+        showToast('Program latihan berhasil dikirim ke WhatsApp kamu!', 'success', { title: 'Terkirim!' })
       }
     } catch (err) {
       const detail = err.response?.data?.detail || ''
@@ -81,7 +81,6 @@ export function WorkoutPlanCard({ plan, generationTime }) {
         background: 'linear-gradient(135deg, rgba(34,197,94,0.08) 0%, transparent 60%)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-          <span style={{ fontSize: 22 }}>🏋️</span>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
             {plan.title || 'Workout Plan'}
           </h3>
@@ -94,7 +93,7 @@ export function WorkoutPlanCard({ plan, generationTime }) {
           )}
           {generationTime && (
             <span className="badge-gray" style={{ color: '#a855f7', borderColor: 'rgba(168,85,247,0.3)', background: 'rgba(168,85,247,0.1)' }}>
-              ⚡ AI: {generationTime}s
+              AI: {generationTime}s
             </span>
           )}
         </div>
@@ -181,7 +180,7 @@ export function WorkoutPlanCard({ plan, generationTime }) {
             borderRadius: 8, padding: '12px 16px',
           }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#22c55e', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              💡 Tips
+              Tips
             </div>
             {plan.tips.map((tip, i) => (
               <div key={i} style={{ fontSize: 13, color: '#a3a3a3', marginBottom: 4 }}>
@@ -198,10 +197,10 @@ export function WorkoutPlanCard({ plan, generationTime }) {
         display: 'flex', gap: 8, flexWrap: 'wrap',
       }}>
         <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px' }} onClick={syncToCalendar} disabled={syncing}>
-          📅 Sync ke Calendar
+          Sync ke Calendar
         </button>
         <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px', backgroundColor: '#25D366', borderColor: '#25D366', color: '#fff' }} onClick={sendToWhatsApp} disabled={syncing}>
-          {syncing ? '⏳ Mengirim...' : '📱 Kirim ke WhatsApp'}
+          {syncing ? 'Mengirim...' : 'Kirim ke WhatsApp'}
         </button>
       </div>
 
@@ -264,7 +263,7 @@ export function MealPlanCard({ plan, generationTime }) {
     try {
       const res = await api.post('/whatsapp/send-plan', plan)
       if (res.data.success) {
-        showToast('Meal plan berhasil dikirim ke WhatsApp kamu! 🥗', 'success', { title: 'Terkirim!' })
+        showToast('Meal plan berhasil dikirim ke WhatsApp kamu!', 'success', { title: 'Terkirim!' })
       }
     } catch (err) {
       const detail = err.response?.data?.detail || ''
@@ -295,13 +294,12 @@ export function MealPlanCard({ plan, generationTime }) {
         background: 'linear-gradient(135deg, rgba(245,158,11,0.08) 0%, transparent 60%)',
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <span style={{ fontSize: 22 }}>🥗</span>
           <h3 style={{ fontSize: 18, fontWeight: 700, color: '#f5f5f5' }}>
             {plan.title || 'Meal Plan'}
           </h3>
           {generationTime && (
             <span className="badge-gray" style={{ marginLeft: 'auto', color: '#a855f7', borderColor: 'rgba(168,85,247,0.3)', background: 'rgba(168,85,247,0.1)', fontSize: 13, padding: '4px 10px' }}>
-              ⚡ AI: {generationTime}s
+              AI: {generationTime}s
             </span>
           )}
         </div>
@@ -362,7 +360,7 @@ export function MealPlanCard({ plan, generationTime }) {
             borderRadius: 8, padding: '12px 16px',
           }}>
             <div style={{ fontSize: 12, fontWeight: 600, color: '#f59e0b', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-              💡 Tips Nutrisi
+              Tips Nutrisi
             </div>
             {plan.tips.map((tip, i) => (
               <div key={i} style={{ fontSize: 13, color: '#a3a3a3', marginBottom: 4 }}>
@@ -379,10 +377,10 @@ export function MealPlanCard({ plan, generationTime }) {
         display: 'flex', gap: 8, flexWrap: 'wrap',
       }}>
         <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px' }} onClick={syncToCalendar} disabled={syncing}>
-          📅 Sync ke Calendar
+          Sync ke Calendar
         </button>
         <button className="btn-primary" style={{ fontSize: 13, padding: '8px 14px', backgroundColor: '#25D366', borderColor: '#25D366', color: '#fff' }} onClick={sendToWhatsApp} disabled={syncing}>
-          {syncing ? '⏳ Mengirim...' : '📱 Kirim ke WhatsApp'}
+          {syncing ? 'Mengirim...' : 'Kirim ke WhatsApp'}
         </button>
       </div>
 

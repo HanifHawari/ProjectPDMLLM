@@ -11,6 +11,8 @@ Alur:
   DELETE /api/users/{username}/sessions/{session_id}        → hapus sesi
 """
 import logging
+import base64
+import binascii
 from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
@@ -19,7 +21,7 @@ from database.db_engine import get_db
 from database.db_models import User, UserProfile, ChatSession, ChatMessage
 from auth import create_access_token, get_current_user
 from models import (
-    APIResponse, UserCreate, UserProfileUpdate,
+    APIResponse, AvatarUpdate, UserCreate, UserProfileUpdate,
     UserResponse
 )
 import bcrypt
@@ -71,6 +73,7 @@ async def login(body: UserCreate, db: Session = Depends(get_db)):
         is_new=False,
         has_profile=existing.profile is not None,
         token=create_access_token(existing),
+        avatar_data=existing.avatar_data,
     )
 
 
@@ -82,7 +85,38 @@ async def get_me(current_user: User = Depends(get_current_user)):
         phone=current_user.phone,
         is_new=False,
         has_profile=current_user.profile is not None,
+        avatar_data=current_user.avatar_data,
     )
+
+
+@router.put("/me/avatar", response_model=APIResponse)
+async def save_avatar(
+    body: AvatarUpdate,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    prefix = "data:image/jpeg;base64,"
+    if not body.data_url.startswith(prefix):
+        raise HTTPException(status_code=400, detail="Foto harus berformat JPEG.")
+    try:
+        image = base64.b64decode(body.data_url[len(prefix):], validate=True)
+    except binascii.Error:
+        raise HTTPException(status_code=400, detail="Data foto tidak valid.") from None
+    if len(image) > 256 * 1024 or not image.startswith(b"\xff\xd8\xff") or not image.endswith(b"\xff\xd9"):
+        raise HTTPException(status_code=400, detail="Foto JPEG tidak valid atau melebihi 256 KB.")
+    current_user.avatar_data = body.data_url
+    db.commit()
+    return APIResponse(data={"avatar_data": current_user.avatar_data})
+
+
+@router.delete("/me/avatar", response_model=APIResponse)
+async def delete_avatar(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    current_user.avatar_data = None
+    db.commit()
+    return APIResponse(message="Foto profil dihapus.")
 
 @router.post("/register", response_model=UserResponse)
 async def register(body: UserCreate, db: Session = Depends(get_db)):

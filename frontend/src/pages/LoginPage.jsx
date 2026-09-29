@@ -69,7 +69,7 @@ export default function LoginPage() {
       {/* Back Button */}
       <button 
         onClick={() => navigate('/')}
-        className="btn-ghost"
+        className="btn-ghost battery-hover"
         style={{
           position: 'absolute',
           top: 32,

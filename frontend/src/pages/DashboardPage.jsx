@@ -1,8 +1,7 @@
-import { Suspense, lazy, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Link } from 'react-router-dom'
 import Sidebar from '../components/Sidebar'
 import api from '../api'
-
-const HeroScene = lazy(() => import('../components/HeroScene'))
 
 const zoneColors = {
   'Zone 1 (Recovery)': '#a3a3a3',
@@ -15,43 +14,85 @@ const zoneColors = {
 const bmiColorMap = { Normal: '#22c55e', Underweight: '#f59e0b', Overweight: '#f97316', Obese: '#ef4444' }
 
 export default function DashboardPage({ user }) {
+  const [profile, setProfile] = useState(null)
+  const [activeCalculator, setActiveCalculator] = useState('bmi')
+  const weeklyTarget = Number(profile?.workout_frequency)
+  const hasWeeklyTarget = Number.isInteger(weeklyTarget) && weeklyTarget >= 1 && weeklyTarget <= 7
+  const workoutNames = { Strength: 'Latihan kekuatan', Cardio: 'Kardio', HIIT: 'HIIT', Yoga: 'Yoga', Mixed: 'Campuran' }
+  const equipmentNames = { None: 'Tanpa alat', Dumbbells: 'Dumbbell', Barbell: 'Barbell', Machine: 'Mesin gym', 'Full Gym': 'Gym lengkap' }
+
+  useEffect(() => {
+    if (!user?.username) return
+    let active = true
+    api.get(`/users/${user.username}/profile`)
+      .then(({ data }) => { if (active) setProfile(data.data) })
+      .catch(() => {})
+    return () => { active = false }
+  }, [user?.username])
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar username={user?.username} />
-      <main className="dashboard-main">
-
-        {/* Hero */}
-        <section style={{
-          position: 'relative', marginBottom: 40, minHeight: 220,
-          overflow: 'hidden', borderRadius: 16,
-          background: '#111111', border: '1px solid #2a2a2a',
-        }}>
-          <Suspense fallback={null}>
-            <HeroScene />
-          </Suspense>
-          <div style={{ position: 'relative', zIndex: 2, padding: '40px 40px' }}>
-            <p style={{ fontSize: 12, color: '#a3a3a3', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
-              Selamat datang kembali
-            </p>
-            <h1 style={{ fontSize: 36, fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 10 }}>
-              {user?.username || 'Athlete'}
-            </h1>
-            <p style={{ fontSize: 14, color: '#a3a3a3', maxWidth: 380 }}>
-              Tanyakan apa saja kepada FitMind AI — dari program latihan hingga informasi nutrisi.
-            </p>
+      <Sidebar username={user?.username} avatarData={user?.avatar_data} />
+      <main className="dashboard-main dashboard-home">
+        <section className="dash-hero">
+          <div className="dash-hero-copy">
+            <span className="dash-eyebrow">RUANG LATIHANMU</span>
+            <h1>Siap bergerak hari ini, <span>{user?.username || 'Atlet'}?</span></h1>
+            <p>Temukan gerakan yang cocok dan susun rencana latihan sesuai tujuanmu.</p>
+            <Link className="dash-hero-cta" to="/plan"><span>Buat rencana latihan</span><span aria-hidden="true">→</span></Link>
+          </div>
+          <img className="dash-hero-image" src="/logo.jpg" alt="Logo FitMindAI" />
+        </section>
+        <div className="dash-metrics" aria-label="Ringkasan profil">
+          <div><strong>{profile?.bmi ?? '—'}</strong><span>BMI tersimpan</span></div>
+          <div><strong>{profile?.workout_frequency ? `${profile.workout_frequency} hari` : '—'}</strong><span>Latihan per minggu</span></div>
+          <div><strong>{profile?.goal || '—'}</strong><span>Tujuan utama</span></div>
+        </div>
+        <section className="dash-section">
+          <div className="dash-section-heading">
+            <h2>Kalkulator Cepat</h2>
+            <div className="dash-calc-tabs" role="tablist" aria-label="Pilih kalkulator">
+              {[
+                { key: 'bmi', label: 'BMI' },
+                { key: 'calories', label: 'Kalori Bakar' },
+                { key: 'bpm', label: 'Detak Jantung' },
+              ].map(item => <button key={item.key} role="tab" aria-selected={activeCalculator === item.key}
+                className={activeCalculator === item.key ? 'is-active' : ''}
+                onClick={() => setActiveCalculator(item.key)}>{item.label}</button>)}
+            </div>
+          </div>
+          <div className="dash-calculator-grid">
+            <div className={`dash-calc-panel ${activeCalculator === 'bmi' ? 'is-active' : ''}`}><BMICard /></div>
+            <div className={`dash-calc-panel ${activeCalculator === 'calories' ? 'is-active' : ''}`}><CaloriesCard /></div>
+            <div className={`dash-calc-panel ${activeCalculator === 'bpm' ? 'is-active' : ''}`}><BPMCard /></div>
           </div>
         </section>
-
-        {/* Section label */}
-        <h2 style={{ fontSize: 12, fontWeight: 600, color: '#525252', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 16 }}>
-          Kalkulator Cepat
-        </h2>
-
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: 20 }}>
-          <BMICard />
-          <CaloriesCard />
-          <BPMCard />
-        </div>
+        <section className="dash-section">
+          <div className="dash-section-heading"><h2>Rencana Latihanmu</h2></div>
+          <div className="dash-training-grid">
+            <div className="dash-training-card">
+              <div className="dash-training-card-heading"><h3>Target mingguan</h3><strong>{hasWeeklyTarget ? `${weeklyTarget} hari` : 'Belum diatur'}</strong></div>
+              {hasWeeklyTarget ? (
+                <>
+                  <div className="dash-week-chart" role="img" aria-label={`Target latihan ${weeklyTarget} dari 7 hari per minggu`}>
+                    {Array.from({ length: 7 }, (_, index) => <span key={index} className={index < weeklyTarget ? 'is-target' : ''} />)}
+                  </div>
+                  <p>Batang hijau menunjukkan target latihan, bukan latihan yang sudah selesai.</p>
+                </>
+              ) : <p>Isi frekuensi latihan di profil untuk melihat target mingguanmu.</p>}
+              <Link to="/profile">Atur target <span aria-hidden="true">→</span></Link>
+            </div>
+            <div className="dash-training-card">
+              <div className="dash-training-card-heading"><h3>Preferensi latihan</h3></div>
+              <dl className="dash-training-details">
+                <div><dt>Jenis latihan</dt><dd>{workoutNames[profile?.workout_type] || profile?.workout_type || 'Belum diatur'}</dd></div>
+                <div><dt>Peralatan</dt><dd>{equipmentNames[profile?.equipment] || profile?.equipment || 'Belum diatur'}</dd></div>
+                <div><dt>Durasi per sesi</dt><dd>{profile?.session_duration ? `${profile.session_duration} menit` : 'Belum diatur'}</dd></div>
+              </dl>
+              <Link to="/workout">Cari gerakan <span aria-hidden="true">→</span></Link>
+            </div>
+          </div>
+        </section>
       </main>
     </div>
   )
@@ -79,7 +120,7 @@ function BMICard() {
   const color = result ? (bmiColorMap[result.category] || '#a3a3a3') : '#22c55e'
 
   return (
-    <div className="card animate-fadeinup" style={{ padding: 24 }}>
+    <div className="card" style={{ padding: 24 }}>
       <SectionHeader label="Kalkulator BMI" />
       {result && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
@@ -135,7 +176,7 @@ function CaloriesCard() {
   }
 
   return (
-    <div className="card animate-fadeinup" style={{ padding: 24 }}>
+    <div className="card" style={{ padding: 24 }}>
       <SectionHeader label="Estimasi Kalori Terbakar" />
       {result && (
         <div style={{ textAlign: 'center', marginBottom: 18 }}>
@@ -184,7 +225,7 @@ function BPMCard() {
   }
 
   return (
-    <div className="card animate-fadeinup" style={{ padding: 24 }}>
+    <div className="card" style={{ padding: 24 }}>
       <SectionHeader label="Zona Detak Jantung" />
       {result && (
         <div style={{ marginBottom: 16 }}>

@@ -232,7 +232,7 @@ export default function WorkoutPage({ user }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar username={user?.username} />
+      <Sidebar username={user?.username} avatarData={user?.avatar_data} />
       <main className="dashboard-main">
         <div style={{ marginBottom: 28 }}>
           <h1 style={{ fontSize: 24, fontWeight: 700, letterSpacing: '-0.02em', marginBottom: 4 }}>Workout</h1>
@@ -312,19 +312,71 @@ export default function WorkoutPage({ user }) {
 }
 
 /* ─── Programs Tab ──────────────────────────────────────── */
+const programLevelNames = {
+  Beginner: 'baru mulai',
+  Novice: 'baru mulai',
+  Intermediate: 'sudah terbiasa berlatih',
+  Advanced: 'berpengalaman',
+}
+
+const programGoalNames = {
+  Bodybuilding: 'membentuk otot',
+  'Muscle & Sculpting': 'membentuk tubuh',
+  Powerbuilding: 'membangun otot dan kekuatan',
+  Powerlifting: 'latihan angkat beban',
+  Athletics: 'meningkatkan kebugaran',
+  'Bodyweight Fitness': 'latihan dengan berat badan sendiri',
+  'Olympic Weightlifting': 'teknik angkat beban',
+}
+
+function programTags(value) {
+  if (!value || value === '[]') return []
+  return String(value).replace(/^\[|\]$/g, '').split(',')
+    .map(item => item.trim().replace(/^['"]|['"]$/g, ''))
+    .filter(Boolean)
+}
+
+function readableProgramLevels(value) {
+  const levels = new Set(programTags(value))
+  const names = [
+    levels.has('Beginner') || levels.has('Novice') ? programLevelNames.Beginner : null,
+    levels.has('Intermediate') ? programLevelNames.Intermediate : null,
+    levels.has('Advanced') ? programLevelNames.Advanced : null,
+  ].filter(Boolean)
+  if (names.length === 3) return 'semua tingkat pengalaman'
+  return names.join(' atau ')
+}
+
+function readableProgramGoals(value) {
+  return [...new Set(programTags(value).map(item => programGoalNames[item]).filter(Boolean))].join(', ')
+}
+
+function programNumber(value, unit) {
+  if (value == null || value === '') return null
+  const number = Number(value)
+  if (!Number.isFinite(number) || number <= 0) return null
+  const formatted = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 1 }).format(number)
+  return unit ? `${formatted} ${unit}` : formatted
+}
+
 function ProgramsTab() {
   const [programs, setPrograms] = useState([])
   const [loading, setLoading] = useState(true)
   const [level, setLevel] = useState('')
+  const [error, setError] = useState('')
 
   useEffect(() => { loadPrograms() }, [])
 
   async function loadPrograms(lvl = '') {
     setLoading(true)
+    setError('')
     try {
       const res = await api.get('/programs', { params: { level: lvl || undefined, limit: 20 } })
       setPrograms(res.data.data || [])
-    } catch {}
+    } catch {
+      setPrograms([])
+      setError('Data program belum dapat dimuat. Coba lagi.')
+    }
     setLoading(false)
   }
 
@@ -333,43 +385,54 @@ function ProgramsTab() {
     loadPrograms(lvl)
   }
 
-  const levelColors = { Beginner: '#22c55e', Intermediate: '#f59e0b', Advanced: '#ef4444' }
-
   return (
     <div>
       <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
-        <button className={!level ? 'badge-green' : 'badge-gray'} onClick={() => filterByLevel('')} style={{ cursor: 'pointer' }}>Semua Level</button>
-        {['Beginner', 'Intermediate', 'Advanced'].map(l => (
-          <button key={l} className={level === l ? 'badge-red' : 'badge-gray'} onClick={() => filterByLevel(l)} style={{ cursor: 'pointer' }}>{l}</button>
+        <button className={!level ? 'badge-green' : 'badge-gray'} aria-pressed={!level}
+          onClick={() => filterByLevel('')} style={{ cursor: 'pointer' }}>Semua</button>
+        {[
+          { value: 'Beginner', label: 'Baru mulai' },
+          { value: 'Intermediate', label: 'Sudah terbiasa' },
+          { value: 'Advanced', label: 'Berpengalaman' },
+        ].map(item => (
+          <button key={item.value} className={level === item.value ? 'badge-green' : 'badge-gray'}
+            aria-pressed={level === item.value}
+            onClick={() => filterByLevel(item.value)} style={{ cursor: 'pointer' }}>{item.label}</button>
         ))}
       </div>
 
-      {loading ? <LoadingSpinner /> : (
+      {loading ? <LoadingSpinner /> : error ? (
+        <div role="alert" style={{ textAlign: 'center', color: '#a3a3a3', padding: 40 }}>{error}</div>
+      ) : programs.length === 0 ? (
+        <div style={{ textAlign: 'center', color: '#a3a3a3', padding: 40 }}>
+          {level ? 'Tidak ada program untuk level ini.' : 'Katalog program belum tersedia.'}
+        </div>
+      ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 14 }}>
           {programs.map((prog, i) => (
             <div key={i} className="card" style={{ padding: 22 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+              <div style={{ marginBottom: 8 }}>
                 <div style={{ fontSize: 15, fontWeight: 600, color: '#f5f5f5', flex: 1 }}>{prog.title}</div>
-                {prog.level && (
-                  <span className="badge-gray" style={{
-                    marginLeft: 8, flexShrink: 0,
-                    color: levelColors[prog.level] || '#a3a3a3',
-                    borderColor: 'transparent', background: `rgba(${prog.level === 'Beginner' ? '34,197,94' : prog.level === 'Advanced' ? '239,68,68' : '245,158,11'},0.1)`,
-                  }}>
-                    {prog.level}
-                  </span>
-                )}
               </div>
-              {prog.goal && <div style={{ fontSize: 13, color: '#a3a3a3', marginBottom: 10 }}>{prog.goal}</div>}
+              {readableProgramLevels(prog.level) && (
+                <div style={{ fontSize: 12, color: '#a3a3a3', marginBottom: 5 }}>
+                  Cocok untuk: {readableProgramLevels(prog.level)}
+                </div>
+              )}
+              {readableProgramGoals(prog.goal) && (
+                <div style={{ fontSize: 12, color: '#a3a3a3', marginBottom: 10 }}>
+                  Tujuan: {readableProgramGoals(prog.goal)}
+                </div>
+              )}
               {prog.description && (
                 <div style={{ fontSize: 12, color: '#525252', marginBottom: 12, lineHeight: 1.5 }}>
                   {prog.description.substring(0, 120)}{prog.description.length > 120 ? '...' : ''}
                 </div>
               )}
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                {prog.program_length && <Stat label="Durasi" value={prog.program_length} />}
-                {prog.time_per_workout && <Stat label="Per Sesi" value={prog.time_per_workout} />}
-                {prog.total_exercises && <Stat label="Gerakan" value={prog.total_exercises} />}
+                {programNumber(prog.program_length, 'minggu') && <Stat label="Lama program" value={programNumber(prog.program_length, 'minggu')} />}
+                {programNumber(prog.time_per_workout, 'menit') && <Stat label="Waktu tiap sesi" value={programNumber(prog.time_per_workout, 'menit')} />}
+                {programNumber(prog.total_exercises, '') && <Stat label="Total gerakan" value={programNumber(prog.total_exercises, '')} />}
               </div>
             </div>
           ))}
@@ -475,12 +538,12 @@ function ExerciseCard({ exercise, onSelect }) {
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {targetLabel && (
             <span style={{ fontSize: 11, color: '#a3a3a3', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 4, padding: '2px 6px' }}>
-              🎯 {targetLabel}
+              {targetLabel}
             </span>
           )}
           {equipmentLabel && (
             <span style={{ fontSize: 11, color: '#a3a3a3', background: '#1a1a1a', border: '1px solid #2a2a2a', borderRadius: 4, padding: '2px 6px' }}>
-              🏋️ {equipmentLabel}
+              {equipmentLabel}
             </span>
           )}
         </div>

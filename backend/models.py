@@ -103,9 +103,14 @@ class UserResponse(BaseModel):
     is_new:     bool  # True jika baru dibuat, False jika sudah ada
     has_profile: bool
     token: Optional[str] = None
+    avatar_data: Optional[str] = None
 
     class Config:
         from_attributes = True
+
+
+class AvatarUpdate(BaseModel):
+    data_url: str = Field(..., max_length=350_000)
 
 
 # Extend ChatRequest untuk mendukung session_id (opsional)

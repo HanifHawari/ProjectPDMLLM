@@ -1,5 +1,6 @@
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { useState } from 'react'
+import UserAvatar from './UserAvatar'
 
 // SVG Icons — transparan seperti sketsa outline
 const Icons = {
@@ -60,7 +61,7 @@ const navItems = [
   { to: '/profile',   label: 'Profile',   iconKey: 'profile'   },
 ]
 
-export default function Sidebar({ username }) {
+export default function Sidebar({ username, avatarData }) {
   const [mobileOpen, setMobileOpen] = useState(false)
 
   function handleLogout() {
@@ -75,19 +76,17 @@ export default function Sidebar({ username }) {
     <>
       {/* ── Mobile Top Bar ──────────────────────────────────── */}
       <div className="sidebar-mobile-bar">
-        <div style={{ fontSize: 18, fontWeight: 700 }}>
-          FitMind<span style={{ color: '#22c55e' }}>AI</span>
-        </div>
         <button
+          className="sidebar-menu-button"
           onClick={() => setMobileOpen(prev => !prev)}
-          style={{
-            background: 'none', border: '1px solid #2a2a2a', color: '#f5f5f5',
-            borderRadius: 8, padding: '6px 12px', cursor: 'pointer', fontSize: 20,
-          }}
           aria-label="Toggle menu"
         >
           {mobileOpen ? '✕' : '☰'}
         </button>
+        <div className="sidebar-mobile-title"><small>FITMIND AI</small><strong>Halo, {username || 'Atlet'}</strong></div>
+        <Link to="/profile" aria-label="Buka profil" className="sidebar-mobile-avatar">
+          <UserAvatar username={username} avatarData={avatarData} size={42} />
+        </Link>
       </div>
 
       {/* ── Mobile Drawer Overlay ───────────────────────────── */}
@@ -102,15 +101,12 @@ export default function Sidebar({ username }) {
       <aside className={`sidebar-aside ${mobileOpen ? 'sidebar-open' : ''}`}>
         {/* Logo (Desktop) */}
         <div className="sidebar-logo">
-          <div style={{ fontSize: 20, fontWeight: 700, color: '#f5f5f5', letterSpacing: '-0.02em' }}>
-            FitMind<span style={{ color: '#22c55e' }}>AI</span>
-          </div>
-          {username && (
-            <div style={{ fontSize: 12, color: '#525252', marginTop: 4 }}>
-              {username}
-            </div>
-          )}
+          <Link to="/dashboard" className="sidebar-brand">FitMind<span>AI</span></Link>
         </div>
+        <Link to="/profile" className="sidebar-user">
+          <UserAvatar username={username} avatarData={avatarData} size={42} />
+          <span><strong>{username || 'Atlet'}</strong><small>Lihat profil</small></span>
+        </Link>
 
         {/* Navigation */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
@@ -144,6 +140,15 @@ export default function Sidebar({ username }) {
           Logout
         </button>
       </aside>
+
+      <nav className="sidebar-bottom-nav" aria-label="Navigasi utama">
+        {navItems.filter(item => item.to !== '/nutrition').map(item => (
+          <NavLink key={item.to} to={item.to} end={item.to === '/dashboard'}>
+            {Icons[item.iconKey]}
+            <span>{item.to === '/dashboard' ? 'Home' : item.to === '/plan' ? 'Plan' : item.to === '/profile' ? 'Profil' : item.label}</span>
+          </NavLink>
+        ))}
+      </nav>
 
       <style>{`
         /* ── Desktop Sidebar ── */
@@ -207,8 +212,8 @@ export default function Sidebar({ username }) {
         /* ── Mobile ── */
         @media (max-width: 768px) {
           .sidebar-aside {
-            top: 56px;
-            height: calc(100dvh - 56px);
+            top: 72px;
+            height: calc(100dvh - 72px);
             transform: translateX(-100%);
             transition: transform 0.3s ease;
             /* Padding bottom agar ada sedikit ruang saat scroll sampai bawah */
@@ -226,7 +231,7 @@ export default function Sidebar({ username }) {
             align-items: center;
             position: fixed;
             top: 0; left: 0; right: 0;
-            height: 56px;
+            height: 72px;
             background: #111111;
             border-bottom: 1px solid #2a2a2a;
             padding: 0 16px;

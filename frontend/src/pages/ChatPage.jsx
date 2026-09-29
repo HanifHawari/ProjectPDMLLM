@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import Sidebar from '../components/Sidebar'
+import UserAvatar from '../components/UserAvatar'
 import ReactMarkdown from 'react-markdown'
 import api from '../api'
 
@@ -206,13 +207,13 @@ export default function ChatPage({ user }) {
 
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
-      <Sidebar username={user?.username} />
+      <Sidebar username={user?.username} avatarData={user?.avatar_data} />
 
       {/* Mobile Backdrop */}
       {mobileHistoryOpen && (
         <div
           onClick={() => setMobileHistoryOpen(false)}
-          style={{ position: 'fixed', inset: 0, top: 56, background: 'rgba(0,0,0,0.6)', zIndex: 99 }}
+          style={{ position: 'fixed', inset: 0, top: 72, background: 'rgba(0,0,0,0.6)', zIndex: 99 }}
         />
       )}
 
@@ -285,7 +286,7 @@ export default function ChatPage({ user }) {
         </div>
 
         {/* Messages */}
-        <div style={{ flex: 1, overflowY: 'auto', padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
+        <div className="chat-messages" style={{ flex: 1, overflowY: 'auto', padding: '32px 40px', display: 'flex', flexDirection: 'column', gap: 20 }}>
           {messages.length === 0 && (
             <div style={{ textAlign: 'center', marginTop: '25vh' }}>
               <div style={{ fontSize: 28, fontWeight: 700, letterSpacing: '-0.03em', marginBottom: 10 }}>
@@ -312,10 +313,9 @@ export default function ChatPage({ user }) {
           )}
 
           {messages.map((msg, i) => (
-            <div key={i} style={{
+            <div key={i} className="chat-message-row" style={{
               display: 'flex',
               justifyContent: msg.role === 'user' ? 'flex-end' : 'flex-start',
-              animation: 'fadeInUp 0.3s ease',
             }}>
               {msg.role === 'assistant' && (
                 <div style={{
@@ -324,10 +324,10 @@ export default function ChatPage({ user }) {
                   <img src="/pp-ai.png" alt="FitMindAI" style={{ width: '100%', height: '100%', objectFit: 'contain', filter: 'hue-rotate(-75deg) saturate(.85)' }} />
                 </div>
               )}
-              <div style={{
+              <div className={`chat-bubble ${msg.role === 'user' ? 'from-user' : 'from-ai'}`} style={{
                 maxWidth: '68%',
-                background: msg.role === 'user' ? 'rgba(239,68,68,0.12)' : '#161616',
-                border: `1px solid ${msg.role === 'user' ? 'rgba(239,68,68,0.25)' : '#2a2a2a'}`,
+                background: msg.role === 'user' ? '#173b31' : '#1c2026',
+                border: `1px solid ${msg.role === 'user' ? '#275c47' : '#303842'}`,
                 borderRadius: msg.role === 'user' ? '16px 4px 16px 16px' : '4px 16px 16px 16px',
                 padding: '12px 16px',
                 fontSize: 14,
@@ -355,13 +355,18 @@ export default function ChatPage({ user }) {
                   <span style={{ color: '#f5f5f5' }}>{msg.content}</span>
                 )}
               </div>
+              {msg.role === 'user' && (
+                <span className="chat-user-avatar">
+                  <UserAvatar username={user?.username} avatarData={user?.avatar_data} size={28} />
+                </span>
+              )}
             </div>
           ))}
           <div ref={bottomRef} />
         </div>
 
         {/* Input */}
-        <div style={{
+        <div className="chat-composer" style={{
           padding: '16px 40px 28px',
           borderTop: '1px solid #2a2a2a',
           background: '#0a0a0a',

@@ -2,7 +2,7 @@
 FitMind AI - Database Engine & Session Manager
 Mengelola koneksi SQLite (dev) / PostgreSQL (prod) dengan SQLAlchemy.
 """
-from sqlalchemy import create_engine, event
+from sqlalchemy import create_engine, event, inspect
 from sqlalchemy.orm import sessionmaker, Session
 from typing import Generator
 import logging
@@ -65,4 +65,7 @@ def init_db():
     from database.db_models import Base
     logger.info("Inisialisasi database — membuat tabel yang belum ada...")
     Base.metadata.create_all(bind=engine)
+    with engine.begin() as connection:
+        if "avatar_data" not in {column["name"] for column in inspect(connection).get_columns("users")}:
+            connection.exec_driver_sql("ALTER TABLE users ADD COLUMN avatar_data TEXT")
     logger.info("Database siap.")

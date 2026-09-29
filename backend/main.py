@@ -14,6 +14,7 @@ from fastapi.staticfiles import StaticFiles
 from config import APP_ENV, APP_HOST, APP_PORT, ALLOWED_ORIGINS
 from vector_store import init_vector_stores
 from database.db_engine import init_db
+from database.catalog_seed import seed_catalogs
 from routers import chat, workout, nutrition, programs, dashboard, users, plans, calendar, whatsapp
 
 # Direktori hasil build frontend (frontend/dist → di-copy ke backend/dist saat build)
@@ -38,6 +39,7 @@ async def lifespan(app: FastAPI):
     """Inisialisasi database dan indeks vektor saat server startup."""
     logger.info("FitMind AI Backend starting...")
     init_db()
+    seed_catalogs()
     init_vector_stores()
     logger.info("Server siap menerima request!")
     yield
