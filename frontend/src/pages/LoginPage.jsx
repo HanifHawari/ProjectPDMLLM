@@ -126,6 +126,7 @@ export default function LoginPage() {
                 style={{ paddingRight: '40px', width: '100%' }}
               />
               <button
+                className="no-fill-hover"
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
@@ -165,6 +166,7 @@ export default function LoginPage() {
         <p style={{ marginTop: 20, fontSize: 13, color: '#a3a3a3', textAlign: 'center' }}>
           Belum punya akun?{' '}
           <button 
+            className="no-fill-hover"
             onClick={() => navigate('/register')}
             style={{ background: 'none', border: 'none', color: '#22c55e', cursor: 'pointer', fontWeight: 600 }}
           >

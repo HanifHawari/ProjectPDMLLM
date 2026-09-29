@@ -151,6 +151,7 @@ export default function RegisterPage() {
                 style={{ paddingRight: '40px', width: '100%' }}
               />
               <button
+                className="no-fill-hover"
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 style={{
@@ -219,6 +220,7 @@ export default function RegisterPage() {
         <p style={{ marginTop: 20, fontSize: 13, color: '#a3a3a3', textAlign: 'center' }}>
           Sudah punya akun?{' '}
           <button 
+            className="no-fill-hover"
             onClick={() => navigate('/login')}
             style={{ background: 'none', border: 'none', color: '#22c55e', cursor: 'pointer', fontWeight: 600 }}
           >

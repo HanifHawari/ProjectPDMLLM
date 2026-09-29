@@ -170,7 +170,7 @@ body {
   font-weight: 500;
 }
 
-button {
+button:not(.no-fill-hover) {
   background-image: linear-gradient(var(--button-fill, #22c55e), var(--button-fill, #22c55e)) !important;
   background-position: left center !important;
   background-repeat: no-repeat !important;
@@ -180,13 +180,18 @@ button {
 
 .btn-primary { --button-fill: #16a34a; }
 
-button:not(:disabled):hover {
+button:not(.no-fill-hover):not(:disabled):hover {
   background-size: 100% 100% !important;
   color: #0a0a0a !important;
 }
 
+button.no-fill-hover {
+  background-image: none !important;
+  transition: none !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  button {
+  button:not(.no-fill-hover) {
     transition-duration: .01ms !important;
   }
 }

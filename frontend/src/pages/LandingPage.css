@@ -212,9 +212,8 @@
 .landing-footer-grid > div:not(:first-child) a { display: block; margin: 10px 0; color: var(--landing-muted); font-size: 12px; }
 .landing-footer-grid > div:not(:first-child) a:hover { color: var(--landing-green); }
 .landing-footer-bottom { display: flex; justify-content: space-between; gap: 15px; padding-block: 20px; border-top: 1px solid #252525; color: #777; font-size: 11px; }
-.landing-floating-chat { position: fixed; z-index: 80; right: 24px; bottom: 24px; width: 55px; height: 55px; display: grid; place-items: center; border-radius: 50%; background-image: linear-gradient(#14532d, #14532d); background-position: left center; background-repeat: no-repeat; background-size: 0% 100%; filter: drop-shadow(0 10px 14px rgba(34,197,94,.3)); transition: background-size .42s cubic-bezier(.22, 1, .36, 1); }
+.landing-floating-chat { position: fixed; z-index: 80; right: 24px; bottom: 24px; width: 55px; height: 55px; display: grid; place-items: center; border-radius: 50%; filter: drop-shadow(0 10px 14px rgba(34,197,94,.3)); }
 .landing-floating-chat img { width: 100%; height: 100%; object-fit: contain; filter: hue-rotate(-75deg) saturate(.85); }
-.landing-floating-chat:hover { background-size: 100% 100%; }
 
 @keyframes landing-rise {
   from { opacity: 0; transform: translate3d(0, 38px, 0); }
