@@ -2,6 +2,35 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './LandingPage.css'
 
+function DevNoticeModal({ onClose }) {
+  useEffect(() => {
+    const handleKey = (e) => { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', handleKey)
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', handleKey)
+      document.body.style.overflow = ''
+    }
+  }, [onClose])
+
+  return (
+    <div className="dev-modal-backdrop" onClick={onClose} role="dialog" aria-modal="true" aria-labelledby="dev-modal-title">
+      <div className="dev-modal" onClick={e => e.stopPropagation()}>
+        <div className="dev-modal-icon" aria-hidden="true">
+          <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+            <line x1="12" y1="9" x2="12" y2="13" />
+            <line x1="12" y1="17" x2="12.01" y2="17" />
+          </svg>
+        </div>
+        <h2 id="dev-modal-title">Sedang dalam pengembangan</h2>
+        <p>Sistem sedang dalam pengembangan. Data dan tampilan dapat berubah sewaktu-waktu.</p>
+        <button className="dev-modal-close" onClick={onClose}>Mengerti</button>
+      </div>
+    </div>
+  )
+}
+
 const navItems = [
   { label: 'Manfaat', href: '#manfaat' },
   { label: 'Fitur', href: '#fitur' },
@@ -116,7 +145,14 @@ function SectionHeading({ title, description }) {
 
 export default function LandingPage() {
   const [menuOpen, setMenuOpen] = useState(false)
+  const [showDevModal, setShowDevModal] = useState(false)
   const pageRef = useRef(null)
+
+  const handleAuthClick = (e) => {
+    e.preventDefault()
+    setMenuOpen(false)
+    setShowDevModal(true)
+  }
 
   useEffect(() => {
     const page = pageRef.current
@@ -164,6 +200,7 @@ export default function LandingPage() {
 
   return (
     <div className="landing-page" ref={pageRef}>
+      {showDevModal && <DevNoticeModal onClose={() => setShowDevModal(false)} />}
       <header className="landing-header">
         <div className="landing-shell landing-header-inner">
           <Link className="landing-brand" to="/" aria-label="FitMindAI, beranda">
@@ -175,14 +212,14 @@ export default function LandingPage() {
               <a key={item.href} href={item.href} onClick={() => setMenuOpen(false)}>{item.label}</a>
             ))}
             <div className="landing-mobile-actions">
-              <Link to="/login">Masuk</Link>
-              <Link to="/register" className="landing-button landing-button-primary">Daftar Gratis</Link>
+              <a href="/login" onClick={handleAuthClick}>Masuk</a>
+              <a href="/register" className="landing-button landing-button-primary" onClick={handleAuthClick}>Daftar Gratis</a>
             </div>
           </nav>
 
           <div className="landing-header-actions">
-            <Link className="landing-login-link" to="/login">Masuk</Link>
-            <Link className="landing-button landing-button-primary" to="/register">Daftar Gratis</Link>
+            <a className="landing-login-link" href="/login" onClick={handleAuthClick}>Masuk</a>
+            <a className="landing-button landing-button-primary" href="/register" onClick={handleAuthClick}>Daftar Gratis</a>
           </div>
           <button
             className="landing-menu-button"
@@ -209,9 +246,9 @@ export default function LandingPage() {
               <h1>GO FURTHER IN LIFE<br />LATIH LEBIH <span>CERDAS</span><br />BERSAMA AI</h1>
               <p>Program latihan terukur, perencanaan nutrisi spesifik bebas alergen, dan asisten sains olahraga.</p>
               <div className="landing-hero-actions">
-                <Link className="landing-button landing-button-primary landing-button-large" to="/register">
+                <a className="landing-button landing-button-primary landing-button-large" href="/register" onClick={handleAuthClick}>
                   Daftar Sekarang
-                </Link>
+                </a>
                 <a className="landing-button landing-button-secondary landing-button-large" href="#fitur">Pelajari Fitur</a>
               </div>
             </div>
@@ -221,9 +258,9 @@ export default function LandingPage() {
         <section className="landing-highlights" aria-label="Jelajahi FitMindAI">
           <div className="landing-shell landing-highlight-grid" data-reveal>
             {highlights.map((item, index) => (
-              <Link className={'landing-highlight-card landing-highlight-card-' + (index + 1)} key={item.to} to={item.to} aria-label={item.label}>
+              <a className={'landing-highlight-card landing-highlight-card-' + (index + 1)} key={item.to} href={item.to} aria-label={item.label} onClick={handleAuthClick}>
                 <img className="landing-highlight-media" src={item.image} alt="" loading="lazy" />
-              </Link>
+              </a>
             ))}
           </div>
         </section>
@@ -261,14 +298,14 @@ export default function LandingPage() {
             <div className="landing-marquee-outer" aria-label="Fitur FitMindAI">
               <div className="landing-marquee-track">
                 {[...features, ...features].map((feature, i) => (
-                  <Link className="landing-feature-card" to={feature.to} key={feature.title + i}>
+                  <a className="landing-feature-card" href={feature.to} key={feature.title + i} onClick={handleAuthClick}>
                     <img className="landing-feature-media" src={feature.image} alt="" loading="lazy" />
                     <span className="landing-feature-shade" aria-hidden="true" />
                     <span className="landing-feature-content">
                       <h3>{feature.title}</h3>
                       <p>{feature.description}</p>
                     </span>
-                  </Link>
+                  </a>
                 ))}
               </div>
             </div>
@@ -285,7 +322,7 @@ export default function LandingPage() {
             <div className="landing-chat-copy landing-reveal" data-reveal>
               <h2>Ada pertanyaan tentang latihan atau nutrisi?</h2>
               <p>Buka AI Chat untuk mengajukan pertanyaan. Percakapanmu tersimpan sehingga dapat dibaca kembali saat dibutuhkan.</p>
-              <Link className="landing-button landing-button-primary" to="/chat">Buka AI Chat</Link>
+              <a className="landing-button landing-button-primary" href="/chat" onClick={handleAuthClick}>Buka AI Chat</a>
             </div>
             <div className="landing-chat-preview landing-reveal" data-reveal>
               <div className="landing-chat-preview-header">
@@ -313,10 +350,10 @@ export default function LandingPage() {
             />
             <div className="landing-gallery-grid landing-cascade" data-reveal>
               {gallery.map(item => (
-                <Link className="landing-gallery-card" to={item.to} key={item.title}>
+                <a className="landing-gallery-card" href={item.to} key={item.title} onClick={handleAuthClick}>
                   <img src={item.image} alt="" loading="lazy" />
                   <span>{item.title}</span>
-                </Link>
+                </a>
               ))}
             </div>
           </div>
@@ -348,15 +385,15 @@ export default function LandingPage() {
             <p>Platform kebugaran berbasis AI untuk latihan, nutrisi, dan rencana yang lebih terarah.</p>
           </div>
           <div><h3>Jelajahi</h3><a href="#fitur">Fitur</a><a href="#personalisasi">Personalisasi</a></div>
-          <div><h3>Fitur aplikasi</h3><Link to="/plan">AI Plan</Link><Link to="/nutrition">Nutrisi</Link><Link to="/workout">Workout</Link></div>
-          <div><h3>Akun & bantuan</h3><Link to="/login">Masuk</Link><Link to="/register">Daftar</Link><a href="#faq">Pertanyaan Umum</a></div>
+          <div><h3>Fitur aplikasi</h3><a href="/plan" onClick={handleAuthClick}>AI Plan</a><a href="/nutrition" onClick={handleAuthClick}>Nutrisi</a><a href="/workout" onClick={handleAuthClick}>Workout</a></div>
+          <div><h3>Akun & bantuan</h3><a href="/login" onClick={handleAuthClick}>Masuk</a><a href="/register" onClick={handleAuthClick}>Daftar</a><a href="#faq">Pertanyaan Umum</a></div>
         </div>
         <div className="landing-shell landing-footer-bottom"><span>© {new Date().getFullYear()} FitMindAI</span><span>Dibuat untuk langkah yang lebih terarah.</span></div>
       </footer>
 
-      <Link className="landing-floating-chat" to="/chat" aria-label="Buka AI Chat" title="Buka AI Chat">
+      <a className="landing-floating-chat" href="/chat" aria-label="Buka AI Chat" title="Buka AI Chat" onClick={handleAuthClick}>
         <img src="/pp-ai.png" alt="" />
-      </Link>
+      </a>
     </div>
   )
 }
